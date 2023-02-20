@@ -2,7 +2,7 @@
 
 CC:= g++
 
-CFLAGS = -std=c++11 -Wno-deprecated-enum-enum-conversion -O2
+CFLAGS = -std=c++17 -Wno-deprecated-enum-enum-conversion -O2
 # CFLAGS += `pkg-config --cflags opencv4` 
 # LDFLAGS = `pkg-config --libs opencv4`
 
