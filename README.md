@@ -1,2 +1,2 @@
 # hugo-vault
-Convert obsidian vault to Hugo posts
+Convert obsidian vault to Hugo posts.
