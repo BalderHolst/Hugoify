@@ -11,7 +11,8 @@ using std::cout;
 using std::endl;
 
 
-string find_file(string dir, string name);
+class Finding;
+Finding find_file(string dir, string name);
 string find_file_in_vault(string vault, string name);
 
 class Link {
@@ -51,46 +52,61 @@ string relative_to(string path, string relative) {
 	exit(1); // TODO
 }
 
+class Finding {
+    bool _found;
+    string _finding;
+
+    public:
+    Finding(string finding = "") : _finding(finding) {
+        if (finding == "") _found = false;
+        else _found = true;
+    }
+    bool was_found(){
+        return _found;
+    }
+    string get_finding(){
+        return _finding;
+    }
+};
+
 string find_file_in_vault(string vault, string name){
-    string absolute = find_file(vault, name);
-    return absolute.substr(vault.length() + 1);
+    Finding finding = find_file(vault, name);
+
+    if (finding.was_found()) {
+        return finding.get_finding().substr(vault.length() + 1);
+    }
+    else {
+        // TODO print warning
+        return vault + "[NOT FOUND]";
+    }
 }
 
-// TODO
-string find_file(string dir, string name){
+Finding find_file(string dir, string name){
 	for (const auto &file : std::filesystem::directory_iterator(dir)) {
-        cout << file.path().filename() << " == " <<  name + ".md" << endl;
 		if (file.is_directory()) {
-            cout << "found dir: " << file.path() << endl;
-            find_file(file.path(), name);
+            Finding finding = find_file(file.path(), name);
+            if (finding.was_found()) return finding;
         }
-		 else if (file.path().filename() == name or file.path().filename() == name + ".md") {
-            cout << "found file: " << file.path() << endl;
-             return file.path();
+		 else { 
+                if ((string) file.path().filename() == name or (string) file.path().filename() == name + ".md") {
+                    return Finding(file.path());
+            }
 		}
 	}
-    return dir + "/[NOT FOUND]";
+    return Finding("");
 }
 
 
 string hugoify_links(string vault, string content){
-
-    std::vector<Link> links = {};
-
-    string s = content; // copy
     std::smatch m;
     std::regex r ("\\[\\[([^\\[\\]]+)\\]\\]" );
 
-    while(std::regex_search(s, m, r)){
+    while(std::regex_search(content, m, r)){
 
         string ms = m[1].str();
 
-        links.push_back(Link::link_from_raw(vault, ms));
-        s = m.suffix(); // remove content until match and match again
-    }
-
-    for (Link l : links) {
-        cout << l.hugo_link() << endl;
+        Link link = Link::link_from_raw(vault, ms);
+        content = content.substr(0, m.position()) + link.hugo_link() + content.substr(m.position() + m.length());
     }
 
     return content;
@@ -131,7 +147,7 @@ void convert_dir(string dir, string out_dir, string vault_root = "") {
 			string out_file = out_dir + "/" + relative_to(file.path(), vault_root);
 
 			/* std::ifstream myfile; myfile.open(file.path()); */
-			std::cout << read_file(file.path()) << std::endl;
+			/* std::cout << read_file(file.path()) << std::endl; */
 
 			std::cout << "Found note: " << out_file << std::endl;
 		}
@@ -144,7 +160,7 @@ int main(int argc, char *argv[]) {
 
 	/* convert_dir(vault_path, out_dir); */
 
-    obsidian_to_hugo(vault_path, read_file("/home/balder/Documents/uni/noter/notes/Skrå Kast.md"));
+    cout << obsidian_to_hugo(vault_path, read_file("/home/balder/Documents/uni/noter/notes/Skrå Kast.md")) << endl;
 
 	return 0;
 }
