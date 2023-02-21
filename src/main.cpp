@@ -97,8 +97,17 @@ void Converter::_convert_dir(path dir, path out_dir) {
     }
 }
 
+string _add_header(path file_path, string contents){
+
+    string header = "---\ntitle: " + file_path.stem().string() + "\n---";
+
+    return header + contents;
+}
+
 string Converter::_obsidian_to_hugo(path file_path, string content) {
     content = _hugoify_links(file_path, content);
+
+    content = _add_header(file_path, content);
     return content;
 }
 
@@ -128,7 +137,7 @@ void Converter::convert_vault(path out_dir) {
 
 int main(int argc, char *argv[]) {
 	string vault_path = "/home/balder/Documents/uni/noter";
-	string out_dir = "out";
+	string out_dir = "/home/balder/projects/website/content/notes";
 
     Converter c = Converter(vault_path);
     c.convert_vault(out_dir);
