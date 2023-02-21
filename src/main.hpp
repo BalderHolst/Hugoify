@@ -1,31 +1,26 @@
 #include <vector>
 #include <iostream>
+#include <filesystem>
 
 using std::string;
+using std::filesystem::path;
 
 class Link;
 class Finding;
 
 Finding find_file(string dir, string name);
-/* string find_file_in_vault(string vault, string name); */
-/* string relative_to(string path, string relative); */
-/* string find_file_in_vault(string vault, string name); */
-/* Finding find_file(string dir, string name); */
-/* string hugoify_links(string vault, string content); */
-/* string obsidian_to_hugo(string vault, string content); */
 string read_file(std::string path);
-/* void convert_dir(string dir, string out_dir, string vault_root); */
-Finding find_file(string dir, string name);
-string find_file_in_vault(string vault, string name);
+Finding find_file(path dir, string name);
+path find_file_in_vault(path vault, string name);
 
 
 
 class Finding {
     bool _found;
-    string _finding;
+    path _finding;
 
     public:
-        Finding(string finding = "") : _finding(finding) {
+        Finding(path finding = "") : _finding(finding) {
             if (finding == "") _found = false;
             else _found = true;
         }
@@ -34,13 +29,13 @@ class Finding {
 };
 
 class Link {
-    string _link;
+    path _link;
     string _name;
     string _tag;
 
 
     public:
-        Link(string name, string link, string tag = "") : _name(name), _link(link), _tag(tag) {
+        Link(string name, path link, string tag = "") : _name(name), _link(link), _tag(tag) {
             if (name == "") _name = link;
         }
         static Link link_from_raw(int dir_debth, string vault, string s){
@@ -69,14 +64,14 @@ class Link {
 
 
 class Converter {
-    string _vault;
+    path _vault;
 
-	void _convert_dir(string dir, string out_dir);
-	string _hugoify_links(string file_path, string content);
-	string _obsidian_to_hugo(string file_path, string content);
-    int dir_debth(string path);
+	void _convert_dir(path dir, path out_dir);
+	string _hugoify_links(path file_path, string content);
+	string _obsidian_to_hugo(path file_path, string content);
+    int dir_debth(path path);
 
 public:
-    void convert_vault(string out_dir);
-    Converter(string vault) : _vault(vault) {}
+    void convert_vault(path out_dir);
+    Converter(path vault) : _vault(vault) {}
 };
