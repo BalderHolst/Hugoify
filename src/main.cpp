@@ -52,8 +52,8 @@ Finding find_file(string dir, string name) {
             if (finding.was_found())
                 return finding;
         } else {
-            if ((string)file.path().filename() == name or
-                    (string) file.path().filename() == name + ".md") {
+            if (file.path().filename() == name or
+                     file.path().filename() == name + ".md") {
                 return Finding(file.path());
             }
         }
@@ -107,7 +107,7 @@ string Converter::_obsidian_to_hugo(string content) {
     return content;
 }
 
-void Converter::convert_vault(string out_dir){
+void Converter::convert_vault(string out_dir) {
     _convert_dir(_vault, out_dir);
 }
 
