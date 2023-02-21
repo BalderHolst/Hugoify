@@ -7,15 +7,31 @@ class Link;
 class Finding;
 
 Finding find_file(string dir, string name);
-string find_file_in_vault(string vault, string name);
-string relative_to(string path, string relative);
-string find_file_in_vault(string vault, string name);
-Finding find_file(string dir, string name);
-string hugoify_links(string vault, string content);
-string obsidian_to_hugo(string vault, string content);
+/* string find_file_in_vault(string vault, string name); */
+/* string relative_to(string path, string relative); */
+/* string find_file_in_vault(string vault, string name); */
+/* Finding find_file(string dir, string name); */
+/* string hugoify_links(string vault, string content); */
+/* string obsidian_to_hugo(string vault, string content); */
 string read_file(std::string path);
-void convert_dir(string dir, string out_dir, string vault_root);
-int main(int argc, char *argv[]);
+/* void convert_dir(string dir, string out_dir, string vault_root); */
+Finding find_file(string dir, string name);
+string find_file_in_vault(string vault, string name);
+
+
+
+class Finding {
+    bool _found;
+    string _finding;
+
+    public:
+        Finding(string finding = "") : _finding(finding) {
+            if (finding == "") _found = false;
+            else _found = true;
+        }
+        bool was_found();
+        string get_finding();
+};
 
 class Link {
     string _link;
@@ -44,17 +60,14 @@ class Link {
 };
 
 
-class Finding {
-    bool _found;
-    string _finding;
+class Converter {
+    string _vault;
 
-    public:
-        Finding(string finding = "") : _finding(finding) {
-            if (finding == "") _found = false;
-            else _found = true;
-        }
-        bool was_found();
-        string get_finding();
+	void _convert_dir(string dir, string out_dir);
+	string _hugoify_links(string content);
+	string _obsidian_to_hugo(string content);
+
+public:
+    void convert_vault(string out_dir);
+    Converter(string vault) : _vault(vault) {}
 };
-
-
