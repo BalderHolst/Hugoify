@@ -83,27 +83,31 @@ void Converter::_convert_dir(string dir, string out_dir) {
             _convert_dir(file.path(), out_dir);
         } else if (ext == ".md") {
             string file_contents = read_file(file.path());
-            string hugo_contents = _obsidian_to_hugo(file_contents);
+            string hugo_contents = _obsidian_to_hugo(file.path(), file_contents);
             write_file(out_path, hugo_contents);
         }
     }
 }
 
+string Converter::_obsidian_to_hugo(string file_path, string content) {
+    content = _hugoify_links(file_path, content);
+    return content;
+}
 
-string Converter::_hugoify_links(string content) {
+int Converter::dir_debth(string path){
+    size_t n = std::count(path.begin(), path.end(), '/') - std::count(_vault.begin(), _vault.end(), '/') - 1;
+    return n;
+}
+
+string Converter::_hugoify_links(string file_path, string content) {
     std::smatch m;
     std::regex r("\\[\\[([^\\[\\]]+)\\]\\]");
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
-        Link link = Link::link_from_raw(_vault, ms);
+        Link link = Link::link_from_raw(dir_debth(file_path), _vault, ms);
         content = content.substr(0, m.position()) + link.hugo_link() +
                             content.substr(m.position() + m.length());
     }
-    return content;
-}
-
-string Converter::_obsidian_to_hugo(string content) {
-    content = _hugoify_links(content);
     return content;
 }
 

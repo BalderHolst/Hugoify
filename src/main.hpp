@@ -38,22 +38,30 @@ class Link {
     string _name;
     string _tag;
 
+
     public:
         Link(string name, string link, string tag = "") : _name(name), _link(link), _tag(tag) {
             if (name == "") _name = link;
         }
-        static Link link_from_raw(string vault, string s){
+        static Link link_from_raw(int dir_debth, string vault, string s){
             int link_sep = s.find("|");
 
-            string link_name = link_sep != -1 ? s.substr(link_sep + 1) : "";
 
             string file_name_plus_tag = s.substr(0, link_sep);
             
             int tag_sep = s.find("#");
 
-            string file_name = tag_sep != -1 ? file_name_plus_tag.substr(0, tag_sep) : file_name_plus_tag.substr(tag_sep + 1);
+            string file_name = tag_sep != -1 ? file_name_plus_tag.substr(0, tag_sep) 
+                : file_name_plus_tag;
+
+            string link_name = link_sep != -1 ? s.substr(link_sep + 1) : file_name;
 
             string link = find_file_in_vault(vault, file_name);
+
+            for (int i = 0; i < dir_debth; i++) {
+                link = "../" + link;
+            }
+
             return Link(link_name, link);
         }
         string hugo_link();
@@ -64,8 +72,9 @@ class Converter {
     string _vault;
 
 	void _convert_dir(string dir, string out_dir);
-	string _hugoify_links(string content);
-	string _obsidian_to_hugo(string content);
+	string _hugoify_links(string file_path, string content);
+	string _obsidian_to_hugo(string file_path, string content);
+    int dir_debth(string path);
 
 public:
     void convert_vault(string out_dir);
