@@ -62,12 +62,12 @@ class Link {
                 chapter = "";
             }
             else if (!bar and hash) {
-                link = full_input.substr(0, hash_index);
+                link = find_file_in_vault(vault, full_input.substr(0, hash_index));
                 chapter = full_input.substr(hash_index + 1);
                 name = full_input;
             }
             else if (bar and hash) {
-                link = full_input.substr(0, hash_index);
+                link = find_file_in_vault(vault, full_input.substr(0, hash_index));
                 chapter = full_input.substr(hash_index + 1, bar_index);
                 name = full_input.substr(bar_index + 1);
             }
