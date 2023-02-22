@@ -61,7 +61,7 @@ class Link {
                 name = full_input.substr(bar_index + 1);
                 chapter = "";
             }
-            else if (!bar and hash) {
+            else if (!bar and hash) { // TODO handle local links
                 link = find_file_in_vault(vault, full_input.substr(0, hash_index));
                 chapter = full_input.substr(hash_index + 1);
                 name = full_input;
