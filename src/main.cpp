@@ -20,9 +20,11 @@ string linkify(path link_path) {
     if (link_path.extension() == ".md") link = link_path.parent_path().string() + "/" + link_path.stem().string();
     else link = link_path.string();
 
-    for (int i = 0; i < link.length(); i++) {
+    for (int i = link.length(); i >= 0 ; i--) {
         link[i] = tolower(link[i]);
-        if (link[i] == ' ') link[i] = '-';
+        switch (link[i]) {
+            case ' ': link[i] = '-'; break;
+        }
     }
 
     return link;
@@ -69,14 +71,19 @@ void write_file(string path, string contents) {
 }
 
 Finding find_file(path dir, string name) {
+    name = linkify(name);
     for (const auto &file : std::filesystem::directory_iterator(dir)) {
         if (file.is_directory()) {
             Finding finding = find_file(file.path(), name);
             if (finding.was_found())
                 return finding;
         } else {
-            if (file.path().filename() == name or
-                     file.path().filename() == name + ".md") {
+            string filename = linkify(file.path().filename());
+
+            if (filename[0] == '/') filename = filename.substr(1);
+
+            if (filename == name) {
+                /* cout << filename + " == " + name << endl; */
                 return Finding(file.path());
             }
         }
@@ -127,6 +134,7 @@ string _add_header(path file_path, string contents){
 }
 
 string Converter::_obsidian_to_hugo(path file_path, path hugo_path, string content) {
+    cout << "Scraping content from: " << file_path.string() << endl;
     content = _hugoify_links(file_path, hugo_path, content);
 
     content = _add_header(file_path, content);
