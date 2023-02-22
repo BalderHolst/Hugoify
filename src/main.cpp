@@ -33,8 +33,17 @@ string linkify(path link_path) {
 }
 
 string Link::hugo_link(path vault, path hugo_path) { 
-    string link = hugo_path.string() + "/" + linkify(_link);
-    return "[" + _name + "](" + link + ")"; 
+    if (has_destination()) {
+        string link = hugo_path.string() + "/" + linkify(_link);
+        return "[" + _name + "](" + link + ")"; 
+    }
+    else {
+        return _name;
+    }
+}
+
+bool Link::has_destination(){
+    return !_no_destination;
 }
 
 path relative_to(path file_path, path relative) {
@@ -103,7 +112,7 @@ path find_file_in_vault(path vault, string name) {
     } else {
         cout << "WARNING: coud not find link \'" << name << "\'" << endl; 
 
-        return vault.string() + "/note-not-found"; // TODO Make this not create a link.
+        return ""; // TODO Make this not create a link.
     }
 }
 
