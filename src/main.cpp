@@ -123,7 +123,7 @@ string Converter::_hugoify_links(path file_path, string content) {
     std::regex r("\\[\\[([^\\[\\]]+)\\]\\]");
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
-        Link link = Link::link_from_raw(dir_debth(file_path), _vault, ms);
+        Link link = Link::link_from_raw(_vault, ms);
 
         content = content.substr(0, m.position()) + link.hugo_link() +
                             content.substr(m.position() + m.length());

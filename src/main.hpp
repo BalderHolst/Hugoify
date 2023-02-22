@@ -12,7 +12,7 @@ Finding find_file(string dir, string name);
 string read_file(std::string path);
 Finding find_file(path dir, string name);
 path find_file_in_vault(path vault, string name);
-
+path relative_to(path file_path, path relative);
 
 
 class Finding {
@@ -31,33 +31,45 @@ class Finding {
 class Link {
     path _link;
     string _name;
-    string _tag;
-
+    string _chapter;
 
     public:
-        Link(string name, path link, string tag = "") : _name(name), _link(link), _tag(tag) {
+        Link(string name, path link, string chapter = "") : _name(name), _link(link), _chapter(chapter) {
             if (name == "") _name = link;
         }
-        static Link link_from_raw(int dir_debth, string vault, string s){
-            int link_sep = s.find("|");
+        static Link link_from_raw(path vault, string full_input){
 
+            // -> link#chapter|name
+            path link;
+            string chapter;
+            string name;
 
-            string file_name_plus_tag = s.substr(0, link_sep);
-            
-            int tag_sep = s.find("#");
+            int bar_index = full_input.find("|");
+            int hash_index = full_input.find("#");
+            bool bar = bar_index != -1;
+            bool hash = hash_index != -1;
 
-            string file_name = tag_sep != -1 ? file_name_plus_tag.substr(0, tag_sep) 
-                : file_name_plus_tag;
-
-            string link_name = link_sep != -1 ? s.substr(link_sep + 1) : file_name;
-
-            string link = find_file_in_vault(vault, file_name);
-
-            for (int i = 0; i < dir_debth; i++) {
-                link = "../" + link;
+            if (!bar and !hash){
+                link = find_file_in_vault(vault, full_input);
+                name = full_input;
+                chapter = "";
             }
-
-            return Link(link_name, link);
+            else if (bar and !hash) {
+                link = find_file_in_vault(vault, full_input.substr(0, bar_index));
+                name = full_input.substr(bar_index + 1);
+                chapter = "";
+            }
+            else if (!bar and hash) {
+                link = full_input.substr(0, hash_index);
+                chapter = full_input.substr(hash_index + 1);
+                name = full_input;
+            }
+            else if (bar and hash) {
+                link = full_input.substr(0, hash_index);
+                chapter = full_input.substr(hash_index + 1, bar_index);
+                name = full_input.substr(bar_index + 1);
+            }
+            return Link(name, link, chapter);
         }
         string hugo_link();
 };
