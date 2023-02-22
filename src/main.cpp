@@ -83,7 +83,6 @@ Finding find_file(path dir, string name) {
             if (filename[0] == '/') filename = filename.substr(1);
 
             if (filename == name) {
-                /* cout << filename + " == " + name << endl; */
                 return Finding(file.path());
             }
         }
