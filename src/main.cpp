@@ -30,7 +30,6 @@ string linkify(path link_path) {
 
 string Link::hugo_link(path vault, path hugo_path) { 
     string link = hugo_path.string() + "/" + linkify(_link);
-    cout << link << endl;
     return "[" + _name + "](" + link + ")"; 
 }
 
@@ -86,14 +85,17 @@ Finding find_file(path dir, string name) {
 }
 
 path find_file_in_vault(path vault, string name) {
+
+    name = ((path) name).filename().string(); // Isolate filename
+
     Finding finding = find_file(vault, name);
 
     if (finding.was_found()) {
         return relative_to(finding.get_finding(), vault);
     } else {
-        // TODO print warning
         cout << "WARNING: coud not find link \'" << name << "\'" << endl; 
-        return vault;
+
+        return vault.string() + "/note-not-found"; // TODO Make this not create a link.
     }
 }
 
@@ -112,7 +114,7 @@ void Converter::_convert_dir(path dir, path out_dir, path hugo_path) {
             string file_contents = read_file(file.path());
             string hugo_contents = _obsidian_to_hugo(file.path(), hugo_path, file_contents);
             write_file(out_path, hugo_contents);
-            cout << "Wrote file: " << out_path << endl;
+            /* cout << "Wrote file: " << out_path << endl; */
         }
     }
 }
