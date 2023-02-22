@@ -1,0 +1,3 @@
+[submodule "src/glob"]
+	path = src/glob
+	url = https://github.com/p-ranav/glob
