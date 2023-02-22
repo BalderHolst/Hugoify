@@ -125,16 +125,29 @@ void Converter::_convert_dir(path dir, path out_dir, path hugo_path) {
     }
 }
 
-string _add_header(path file_path, string contents){
+string Converter::_add_header(path file_path, string contents){
 
     string header = "---\ntitle: " + file_path.stem().string() + "\n---";
 
     return header + contents;
 }
 
+// TODO optimise...
+string Converter::_double_newlines(string content){
+    for (int i = content.length(); i >= 0; i--) {
+        if (content[i] == '\n'){
+            content = content.substr(0, i) + "\n" + content.substr(i);
+            i--;
+        }
+    }
+
+    return content;
+}
+
 string Converter::_obsidian_to_hugo(path file_path, path hugo_path, string content) {
     cout << "Scraping content from: " << file_path.string() << endl;
     content = _hugoify_links(file_path, hugo_path, content);
+    content = _double_newlines(content);
 
     content = _add_header(file_path, content);
     return content;

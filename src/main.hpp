@@ -82,6 +82,8 @@ class Converter {
 	string _hugoify_links(path file_path, path hugo_path, string content);
 	string _obsidian_to_hugo(path file_path, path hugo_path, string content);
     int dir_debth(path path);
+    string _double_newlines(string content);
+    string _add_header(path file_path, string contents);
 
 public:
     void convert_vault(path out_dir, path hugo_path);
