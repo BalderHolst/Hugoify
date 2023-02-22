@@ -1,5 +1,6 @@
 #include "main.hpp"
 #include <algorithm>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -12,7 +13,26 @@ using std::endl;
 using std::string;
 using std::filesystem::path;
 
-string Link::hugo_link() { return "[" + _name + "](" + _link.string() + ")"; }
+string linkify(path link_path) {
+
+    string link;
+
+    if (link_path.extension() == ".md") link = link_path.parent_path().string() + "/" + link_path.stem().string();
+    else link = link_path.string();
+
+    for (int i = 0; i < link.length(); i++) {
+        link[i] = tolower(link[i]);
+        if (link[i] == ' ') link[i] = '-';
+    }
+
+    return link;
+}
+
+string Link::hugo_link(path vault, path hugo_path) { 
+    string link = hugo_path.string() + "/" + linkify(_link);
+    cout << link << endl;
+    return "[" + _name + "](" + link + ")"; 
+}
 
 path relative_to(path file_path, path relative) {
     string path_string = file_path.string();
@@ -78,7 +98,7 @@ path find_file_in_vault(path vault, string name) {
 }
 
 
-void Converter::_convert_dir(path dir, path out_dir) {
+void Converter::_convert_dir(path dir, path out_dir, path hugo_path) {
     for (const auto &file : std::filesystem::directory_iterator(dir)) {
         string ext = file.path().extension();
         path out_path = out_dir.string() + "/" + relative_to(file.path(), _vault).string();
@@ -87,10 +107,10 @@ void Converter::_convert_dir(path dir, path out_dir) {
 
         if (file.is_directory()) {
             std::filesystem::create_directory(out_path);
-            _convert_dir(file.path(), out_dir);
+            _convert_dir(file.path(), out_dir, hugo_path);
         } else if (ext == ".md") {
             string file_contents = read_file(file.path());
-            string hugo_contents = _obsidian_to_hugo(file.path(), file_contents);
+            string hugo_contents = _obsidian_to_hugo(file.path(), hugo_path, file_contents);
             write_file(out_path, hugo_contents);
             cout << "Wrote file: " << out_path << endl;
         }
@@ -104,8 +124,8 @@ string _add_header(path file_path, string contents){
     return header + contents;
 }
 
-string Converter::_obsidian_to_hugo(path file_path, string content) {
-    content = _hugoify_links(file_path, content);
+string Converter::_obsidian_to_hugo(path file_path, path hugo_path, string content) {
+    content = _hugoify_links(file_path, hugo_path, content);
 
     content = _add_header(file_path, content);
     return content;
@@ -118,29 +138,31 @@ int Converter::dir_debth(path path){
     return n;
 }
 
-string Converter::_hugoify_links(path file_path, string content) {
+string Converter::_hugoify_links(path file_path, path hugo_path, string content) {
     std::smatch m;
     std::regex r("\\[\\[([^\\[\\]]+)\\]\\]");
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
         Link link = Link::link_from_raw(_vault, ms);
 
-        content = content.substr(0, m.position()) + link.hugo_link() +
+        content = content.substr(0, m.position()) + link.hugo_link(_vault, hugo_path) +
                             content.substr(m.position() + m.length());
     }
     return content;
 }
 
-void Converter::convert_vault(path out_dir) {
-    _convert_dir(_vault, out_dir);
+void Converter::convert_vault(path out_dir, path hugo_path) {
+    _convert_dir(_vault, out_dir, hugo_path);
 }
 
 int main(int argc, char *argv[]) {
-	string vault_path = "/home/balder/Documents/uni/noter";
-	string out_dir = "/home/balder/projects/website/content/notes";
+	path vault_path = "/home/balder/Documents/uni/noter";
+	path out_dir = "/home/balder/projects/website/content/notes";
+    path hugo_path = "/notes";
+
 
     Converter c = Converter(vault_path);
-    c.convert_vault(out_dir);
+    c.convert_vault(out_dir, hugo_path);
 
 	return 0;
 }

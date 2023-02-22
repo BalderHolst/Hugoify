@@ -71,19 +71,19 @@ class Link {
             }
             return Link(name, link, chapter);
         }
-        string hugo_link();
+        string hugo_link(path vault, path hugo_path);
 };
 
 
 class Converter {
     path _vault;
 
-	void _convert_dir(path dir, path out_dir);
-	string _hugoify_links(path file_path, string content);
-	string _obsidian_to_hugo(path file_path, string content);
+	void _convert_dir(path dir, path out_dir, path hugo_path);
+	string _hugoify_links(path file_path, path hugo_path, string content);
+	string _obsidian_to_hugo(path file_path, path hugo_path, string content);
     int dir_debth(path path);
 
 public:
-    void convert_vault(path out_dir);
+    void convert_vault(path out_dir, path hugo_path);
     Converter(path vault) : _vault(vault) {}
 };
