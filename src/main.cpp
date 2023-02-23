@@ -26,6 +26,8 @@ string linkify(path link_path) {
         link[i] = tolower(link[i]);
         switch (link[i]) {
             case ' ': link[i] = '-'; break;
+            case '(':
+            case ')': link = link.substr(0, i) + link.substr(i + 1); break;
         }
     }
 
