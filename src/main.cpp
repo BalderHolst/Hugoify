@@ -14,6 +14,7 @@ using std::cout;
 using std::endl;
 using std::string;
 using std::filesystem::path;
+namespace fs = std::filesystem;
 
 string linkify(path link_path) {
 
@@ -190,6 +191,36 @@ void Converter::convert_vault(path out_dir, path hugo_path) {
     _convert_dir(_vault, out_dir, hugo_path);
 }
 
+std::vector<path> Converter::_get_excluded() {
+
+    path exclude_path = _vault.string() + "/.export-ignore";
+
+    if (!fs::exists(exclude_path)) return {};
+
+    string exclude_string = read_file(exclude_path);
+
+    std::vector<string> globs = {};
+
+    int newline_location;
+    string glob;
+    do {
+        newline_location = exclude_string.find("\n");
+        glob = exclude_string.substr(0, newline_location);
+        exclude_string = exclude_string.substr(newline_location + 1);
+        if (glob != "") globs.push_back(glob);
+    } while (newline_location != -1);
+
+    std::vector<path> paths = {};
+
+    for (string g : globs) {
+        for (path& p : glob::glob(_vault.string() + "/" + g)) {
+            paths.push_back(p);
+        }
+    }
+
+    return paths;
+}
+
 int main(int argc, char *argv[]) {
 	path vault_path = "/home/balder/Documents/uni/noter";
 	path out_dir = "/home/balder/projects/website/content/notes";
@@ -197,7 +228,6 @@ int main(int argc, char *argv[]) {
 
 
     Converter c = Converter(vault_path);
-    c.convert_vault(out_dir, hugo_path);
-
+    /* c.convert_vault(out_dir, hugo_path); */
 	return 0;
 }

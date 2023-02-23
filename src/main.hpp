@@ -81,8 +81,10 @@ class Link {
 
 class Converter {
     path _vault;
+    std::vector<path> _excluded_paths;
 
 	void _convert_dir(path dir, path out_dir, path hugo_path);
+    std::vector<path> _get_excluded(); 
 	string _hugoify_links(path file_path, path hugo_path, string content);
 	string _obsidian_to_hugo(path file_path, path hugo_path, string content);
     int dir_debth(path path);
@@ -91,5 +93,7 @@ class Converter {
 
 public:
     void convert_vault(path out_dir, path hugo_path);
-    Converter(path vault) : _vault(vault) {}
+    Converter(path vault) : _vault(vault) {
+        _excluded_paths = _get_excluded();
+    }
 };
