@@ -90,6 +90,7 @@ class Converter {
     int dir_debth(path path);
     string _double_newlines(string content);
     string _add_header(path file_path, string contents);
+    bool _is_excluded(path file_path);
 
 public:
     void convert_vault(path out_dir, path hugo_path);

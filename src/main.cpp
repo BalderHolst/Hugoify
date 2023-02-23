@@ -119,6 +119,12 @@ path find_file_in_vault(path vault, string name) {
     }
 }
 
+bool Converter::_is_excluded(path file_path){
+    for (path excluded_path : _excluded_paths) {
+        if (file_path == excluded_path) return true;
+    }
+    return false;
+}
 
 void Converter::_convert_dir(path dir, path out_dir, path hugo_path) {
     for (const auto &file : std::filesystem::directory_iterator(dir)) {
@@ -126,6 +132,11 @@ void Converter::_convert_dir(path dir, path out_dir, path hugo_path) {
         path out_path = out_dir.string() + "/" + relative_to(file.path(), _vault).string();
 
         std::filesystem::create_directory(out_dir);
+
+        if (_is_excluded(file.path())) {
+            cout << "Excluding " << file.path() << endl;
+            continue;
+        }
 
         if (file.is_directory()) {
             std::filesystem::create_directory(out_path);
@@ -214,9 +225,17 @@ std::vector<path> Converter::_get_excluded() {
 
     for (string g : globs) {
         for (path& p : glob::glob(_vault.string() + "/" + g)) {
+            string p_string = p.string();
+            if (p_string[p_string.length() - 1] == '/') p = ((path) p_string.substr(0, p_string.length() - 1));
             paths.push_back(p);
         }
     }
+
+    cout << "Excluded paths:" << endl;
+    for (path p : paths) {
+        cout << "\t" << p << endl;
+    }
+    cout << endl;
 
     return paths;
 }
@@ -228,6 +247,6 @@ int main(int argc, char *argv[]) {
 
 
     Converter c = Converter(vault_path);
-    /* c.convert_vault(out_dir, hugo_path); */
+    c.convert_vault(out_dir, hugo_path);
 	return 0;
 }
