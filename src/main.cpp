@@ -35,9 +35,14 @@ string linkify(path link_path) {
     return link;
 }
 
-string Link::hugo_link(path vault, path hugo_path) { 
+path Link::hugo_link(path hugo_path){
+    path p = hugo_path.string() + "/" + linkify(_link);
+    return p;
+}
+
+string Link::hugo_markdown_link(path vault, path hugo_path) { 
     if (has_destination()) {
-        string link = hugo_path.string() + "/" + linkify(_link);
+        string link = hugo_link(hugo_path);
         return "[" + _name + "](" + link + ")"; 
     }
     else {
@@ -192,7 +197,7 @@ string Converter::_hugoify_links(path file_path, path hugo_path, string content)
         string ms = m[1].str();
         Link link = Link::link_from_raw(_vault, ms);
 
-        content = content.substr(0, m.position()) + link.hugo_link(_vault, hugo_path) +
+        content = content.substr(0, m.position()) + link.hugo_markdown_link(_vault, hugo_path) +
                             content.substr(m.position() + m.length());
     }
     return content;

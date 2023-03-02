@@ -74,7 +74,8 @@ class Link {
             return Link(name, link, chapter);
         }
 
-        string hugo_link(path vault, path hugo_path);
+        path hugo_link(path hugo_path);
+        string hugo_markdown_link(path vault, path hugo_path);
         bool has_destination();
 };
 
