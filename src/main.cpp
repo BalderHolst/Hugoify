@@ -1,5 +1,8 @@
-#include "main.hpp"
 #include "glob/single_include/glob/glob.hpp"
+
+#include "converter.hpp"
+#include "link.hpp"
+#include "finding.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -33,6 +36,44 @@ string linkify(path link_path) {
     }
 
     return link;
+}
+
+
+path find_file_in_vault(path vault, string name);
+
+Link Link::link_from_raw(path vault, string full_input){
+
+    // -> link#chapter|name
+    path link;
+    string chapter;
+    string name;
+
+    int bar_index = full_input.find("|");
+    int hash_index = full_input.find("#");
+    bool bar = bar_index != -1;
+    bool hash = hash_index != -1;
+
+    if (!bar and !hash){
+        link = find_file_in_vault(vault, full_input);
+        name = full_input;
+        chapter = "";
+    }
+    else if (bar and !hash) {
+        link = find_file_in_vault(vault, full_input.substr(0, bar_index));
+        name = full_input.substr(bar_index + 1);
+        chapter = "";
+    }
+    else if (!bar and hash) { // TODO handle local links
+        link = find_file_in_vault(vault, full_input.substr(0, hash_index));
+        chapter = full_input.substr(hash_index + 1);
+        name = full_input;
+    }
+    else if (bar and hash) {
+        link = find_file_in_vault(vault, full_input.substr(0, hash_index));
+        chapter = full_input.substr(hash_index + 1, bar_index);
+        name = full_input.substr(bar_index + 1);
+    }
+    return Link(name, link, chapter);
 }
 
 path Link::hugo_link(path hugo_path){
