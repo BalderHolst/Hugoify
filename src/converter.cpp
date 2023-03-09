@@ -3,11 +3,14 @@
 
 #include "glob/single_include/glob/glob.hpp"
 
+#include <filesystem>
 #include <iostream>
 #include <regex>
 
 using std::cout;
 using std::endl;
+
+namespace fs = std::filesystem;
 
 // TODO do something about this
 string read_file(std::string path);
@@ -93,6 +96,7 @@ string Converter::_hugoify_links(path file_path, path hugo_path, string content)
 }
 
 void Converter::convert_vault(path out_dir, path hugo_path) {
+    fs::remove_all(out_dir);
     _convert_dir(_vault, out_dir, hugo_path);
 }
 
