@@ -56,18 +56,6 @@ Finding find_file(path dir, string name) {
 }
 
 
-
-path relative_to(path file_path, path relative) {
-    string path_string = file_path.string();
-    string other_string = relative.string();
-    
-    if (other_string == path_string.substr(0, other_string.length())) {
-        return path_string.substr(other_string.length() + 1);
-	}
-	exit(1); // TODO
-}
-
-
 // Copy pasted code...
 string read_file(std::string path) {
     constexpr auto read_size = std::size_t(4096);
@@ -98,7 +86,7 @@ path find_file_in_vault(path vault, string name) {
     Finding finding = find_file(vault, name);
 
     if (finding.was_found()) {
-        return relative_to(finding.get_finding(), vault);
+        return ((path) finding.get_finding()).lexically_relative(vault);
     } else {
         cout << "WARNING: coud not find link \'" << name << "\'" << endl; 
 

@@ -10,7 +10,6 @@ using std::cout;
 using std::endl;
 
 // TODO do something about this
-path relative_to(path file_path, path relative);
 string read_file(std::string path);
 void write_file(string path, string contents);
 
@@ -24,7 +23,7 @@ bool Converter::_is_excluded(path file_path){
 void Converter::_convert_dir(path dir, path out_dir, path hugo_path) {
     for (const auto &file : std::filesystem::directory_iterator(dir)) {
         string ext = file.path().extension();
-        path out_path = out_dir.string() + "/" + relative_to(file.path(), _vault).string();
+        path out_path = out_dir.string() + "/" + (file.path().lexically_relative(_vault)).string();
 
         std::filesystem::create_directory(out_dir);
 
