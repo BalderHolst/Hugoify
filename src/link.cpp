@@ -4,6 +4,10 @@
 path find_file_in_vault(path vault, string name);
 string linkify(path link_path);
 
+Link::Link(string name, path link, string chapter) : _name(name), _link(link), _chapter(chapter) {
+    if (name == "") _name = link;
+    _no_destination = link == "";
+}
 
 Link Link::link_from_raw(path vault, string full_input){
 
