@@ -1,15 +1,17 @@
-
 #include "converter.hpp"
 #include "link.hpp"
+#include "note.hpp"
 
 #include "glob/single_include/glob/glob.hpp"
 
 #include <filesystem>
 #include <iostream>
 #include <regex>
+#include <vector>
 
 using std::cout;
 using std::endl;
+using std::vector;
 
 namespace fs = std::filesystem;
 
@@ -17,6 +19,11 @@ namespace fs = std::filesystem;
 string read_file(std::string path);
 void write_file(string path, string contents);
 string linkify(path link_path);
+
+Converter::Converter(path vault) : _vault(vault) {
+    _excluded_paths = _get_excluded();
+    _notes = _findNotes(vault);
+}
 
 bool Converter::_is_excluded(path file_path){
     for (path excluded_path : _excluded_paths) {
@@ -138,6 +145,21 @@ std::vector<path> Converter::_get_excluded() {
     cout << endl;
 
     return paths;
+}
+
+vector<Note> Converter::_findNotes(path dir){
+    vector<Note> notes = {};
+
+    for (const auto &file : std::filesystem::directory_iterator(dir)) {
+        path file_path = file.path();
+        if (file.is_directory()) {
+            _findNotes(dir);
+        } else if (file_path.extension() == ".md") {
+            notes.push_back(Note(_vault, file_path));
+        }
+    }
+
+    return notes;
 }
 
 Finding Converter::_find_file(path dir, string name) {
