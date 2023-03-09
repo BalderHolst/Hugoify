@@ -19,7 +19,6 @@ class Converter {
     std::vector<path> _get_excluded(); 
 	string _hugoify_links(path file_path, path hugo_path, string content);
 	string _obsidian_to_hugo(path file_path, path hugo_path, string content);
-    int dir_debth(path path);
     string _double_newlines(string content);
     string _add_header(path file_path, string contents);
     bool _is_excluded(path file_path);

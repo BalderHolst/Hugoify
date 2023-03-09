@@ -84,13 +84,6 @@ string Converter::_obsidian_to_hugo(path file_path, path hugo_path, string conte
     return content;
 }
 
-int Converter::dir_debth(path path){
-    string path_string = path.string();
-    string vault_string = _vault.string();
-    size_t n = std::count(path_string.begin(), path_string.end(), '/') - std::count(vault_string.begin(), vault_string.end(), '/') - 1;
-    return n;
-}
-
 string Converter::_hugoify_links(path file_path, path hugo_path, string content) {
     std::smatch m;
     std::regex r("\\[\\[([^\\[\\]]+)\\]\\]");
