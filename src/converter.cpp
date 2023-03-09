@@ -17,10 +17,10 @@ namespace fs = std::filesystem;
 
 // TODO do something about this
 string read_file(std::string path);
-void write_file(string path, string contents);
+void write_file(path file_path, string contents);
 string linkify(path link_path);
 
-Converter::Converter(path vault) : _vault(vault) {
+Converter::Converter(path vault, path hugo_root, path content_dir) : _vault(vault), _hugo_root(hugo_root), _content_dir(content_dir) {
     _excluded_paths = _get_excluded();
     _notes = _findNotes(vault);
 }
@@ -32,34 +32,18 @@ bool Converter::_is_excluded(path file_path){
     return false;
 }
 
-void Converter::_convert_dir(path dir, path out_dir, path hugo_path) {
-    for (const auto &file : std::filesystem::directory_iterator(dir)) {
-        string ext = file.path().extension();
-        path out_path = out_dir.string() + "/" + (file.path().lexically_relative(_vault)).string();
-
-        std::filesystem::create_directory(out_dir);
-
-        if (_is_excluded(file.path())) {
-            cout << "Excluding " << file.path() << endl;
-            continue;
-        }
-
-        if (file.is_directory()) {
-            std::filesystem::create_directory(out_path);
-            _convert_dir(file.path(), out_dir, hugo_path);
-        } else if (ext == ".md") {
-            string file_contents = read_file(file.path());
-            string hugo_contents = _obsidian_to_hugo(file.path(), hugo_path, file_contents);
-            write_file(out_path, hugo_contents);
-            /* cout << "Wrote file: " << out_path << endl; */
-        }
+void Converter::convert_vault(path out_dir) {
+    fs::remove_all(out_dir);
+    /* _convert_dir(_vault, out_dir, hugo_path); */
+    for (Note note : _notes){
+        path obsidian_path = _vault / note.getRelativePath();
+        string hugo_contents = _obsidian_to_hugo(note);
+        write_file(_hugo_root / "content" / _content_dir / note.getRelativePath(), hugo_contents);
     }
 }
 
 string Converter::_add_header(path file_path, string contents){
-
     string header = "---\ntitle: " + file_path.stem().string() + "\n---";
-
     return header + contents;
 }
 
@@ -71,36 +55,33 @@ string Converter::_double_newlines(string content){
             i--;
         }
     }
-
     return content;
 }
 
-string Converter::_obsidian_to_hugo(path file_path, path hugo_path, string content) {
-    cout << "Scraping content from: " << file_path.string() << endl;
-    content = _hugoify_links(file_path, hugo_path, content);
+string Converter::_obsidian_to_hugo(Note note) {
+    path obsidian_path = _vault / note.getRelativePath();
+    string content = read_file(obsidian_path);
+
+    cout << "Scraping content from: " << obsidian_path.string() << endl;
+    content = _hugoify_links(content);
     content = _double_newlines(content);
 
-    content = _add_header(file_path, content);
+    content = _add_header(obsidian_path, content);
     return content;
 }
 
-string Converter::_hugoify_links(path file_path, path hugo_path, string content) {
+string Converter::_hugoify_links(string content) {
     std::smatch m;
     std::regex r("\\[\\[([^\\[\\]]+)\\]\\]");
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
         Link link = Link::link_from_raw(_vault, ms, this);
-
-        content = content.substr(0, m.position()) + link.hugo_markdown_link(_vault, hugo_path) +
+        content = content.substr(0, m.position()) + link.hugo_markdown_link(_vault, _content_dir) +
                             content.substr(m.position() + m.length());
     }
     return content;
 }
 
-void Converter::convert_vault(path out_dir, path hugo_path) {
-    fs::remove_all(out_dir);
-    _convert_dir(_vault, out_dir, hugo_path);
-}
 
 std::vector<path> Converter::_get_excluded() {
 
@@ -146,7 +127,7 @@ vector<Note> Converter::_findNotes(path dir){
     for (const auto &file : std::filesystem::directory_iterator(dir)) {
         path file_path = file.path();
         if (file.is_directory()) {
-            _findNotes(dir);
+            for (Note note : _findNotes(file_path)) notes.push_back(note);
         } else if (file_path.extension() == ".md") {
             notes.push_back(Note(_vault, file_path));
         }

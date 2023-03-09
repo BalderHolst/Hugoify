@@ -44,15 +44,10 @@ Link Link::link_from_raw(path vault, string full_input, Converter* converter){
     return Link(name, link, chapter);
 }
 
-path Link::hugo_link(path hugo_path){
-    path p = hugo_path.string() + "/" + linkify(_link);
-    return p;
-}
-
 string Link::hugo_markdown_link(path vault, path hugo_path) { 
     if (has_destination()) {
-        string link = hugo_link(hugo_path);
-        return "[" + _name + "](" + link + ")"; 
+        string link = hugo_path.string() + "/" + linkify(_link);
+        return "[" + _name + "](/" + link + ")"; 
     }
     else {
         return _name;

@@ -12,13 +12,15 @@ using std::filesystem::path;
 
 class Converter {
     path _vault;
+    path _hugo_root;
+    path _content_dir;
     std::vector<path> _excluded_paths;
     std::vector<Note> _notes;
 
 	void _convert_dir(path dir, path out_dir, path hugo_path);
     std::vector<path> _get_excluded(); 
-	string _hugoify_links(path file_path, path hugo_path, string content);
-	string _obsidian_to_hugo(path file_path, path hugo_path, string content);
+	string _hugoify_links(string content);
+	string _obsidian_to_hugo(Note note);
     string _double_newlines(string content);
     string _add_header(path file_path, string contents);
     bool _is_excluded(path file_path);
@@ -26,8 +28,8 @@ class Converter {
     vector<Note> _findNotes(path dir);
 
 public:
-    void convert_vault(path out_dir, path hugo_path);
-    Converter(path vault);
+    Converter(path vault, path hugo_root, path content_dir = "notes");
+    void convert_vault(path out_dir);
     path find_file(string name);
 };
 

@@ -14,6 +14,8 @@ using std::endl;
 using std::string;
 using std::filesystem::path;
 
+namespace fs = std::filesystem;
+
 
 string linkify(path link_path) {
     string link;
@@ -50,9 +52,14 @@ string read_file(std::string path) {
     return out;
 }
 
-void write_file(string path, string contents) {
+void write_file(path file_path, string contents) {
+    path parent = file_path.parent_path();
+    if (!fs::exists(parent)){
+        fs::create_directories(parent);
+    }
+    
     std::ofstream myfile;
-    myfile.open(path);
+    myfile.open(file_path);
     myfile << contents;
     myfile.close();
 }
@@ -63,10 +70,10 @@ int main(int argc, char *argv[]) {
 	/* path vault_path = "/home/balder/Documents/uni/noter"; */
 	path vault_path = "/home/balder/projects/hugo-vault/test_vault";
 	path out_dir = "/home/balder/projects/website/content/notes";
-    path hugo_path = "/notes";
+	path hugo_path = "/home/balder/projects/website";
 
 
-    Converter c = Converter(vault_path);
-    c.convert_vault(out_dir, hugo_path);
+    Converter c = Converter(vault_path, hugo_path);
+    c.convert_vault(out_dir);
 	return 0;
 }
