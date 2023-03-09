@@ -1,3 +1,6 @@
+#ifndef FINDING_INCLUDES
+#define FINDING_INCLUDES
+
 #include <filesystem>
 #include <vector>
 
@@ -14,3 +17,5 @@ class Finding {
         bool was_found();
         string get_finding();
 };
+
+#endif // !FINDING_INCLUDES

@@ -1,7 +1,6 @@
 
 #include "converter.hpp"
 #include "link.hpp"
-#include "finding.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -17,7 +16,6 @@ using std::filesystem::path;
 
 
 string linkify(path link_path) {
-
     string link;
 
     if (link_path.extension() == ".md") link = link_path.parent_path().string() + "/" + link_path.stem().string();
@@ -35,25 +33,6 @@ string linkify(path link_path) {
     return link;
 }
 
-Finding find_file(path dir, string name) {
-    name = linkify(name);
-    for (const auto &file : std::filesystem::directory_iterator(dir)) {
-        if (file.is_directory()) {
-            Finding finding = find_file(file.path(), name);
-            if (finding.was_found())
-                return finding;
-        } else {
-            string filename = linkify(file.path().filename());
-
-            if (filename[0] == '/') filename = filename.substr(1);
-
-            if (filename == name) {
-                return Finding(file.path());
-            }
-        }
-    }
-    return Finding("");
-}
 
 
 // Copy pasted code...
@@ -79,24 +58,10 @@ void write_file(string path, string contents) {
 }
 
 
-path find_file_in_vault(path vault, string name) {
-
-    name = ((path) name).filename().string(); // Isolate filename
-
-    Finding finding = find_file(vault, name);
-
-    if (finding.was_found()) {
-        return ((path) finding.get_finding()).lexically_relative(vault);
-    } else {
-        cout << "WARNING: coud not find link \'" << name << "\'" << endl; 
-
-        return ""; // TODO Make this not create a link.
-    }
-}
-
 
 int main(int argc, char *argv[]) {
-	path vault_path = "/home/balder/Documents/uni/noter";
+	/* path vault_path = "/home/balder/Documents/uni/noter"; */
+	path vault_path = "/home/balder/projects/hugo-vault/test_vault";
 	path out_dir = "/home/balder/projects/website/content/notes";
     path hugo_path = "/notes";
 

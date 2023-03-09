@@ -1,3 +1,4 @@
+
 #include "converter.hpp"
 #include "link.hpp"
 
@@ -15,6 +16,7 @@ namespace fs = std::filesystem;
 // TODO do something about this
 string read_file(std::string path);
 void write_file(string path, string contents);
+string linkify(path link_path);
 
 bool Converter::_is_excluded(path file_path){
     for (path excluded_path : _excluded_paths) {
@@ -87,7 +89,7 @@ string Converter::_hugoify_links(path file_path, path hugo_path, string content)
     std::regex r("\\[\\[([^\\[\\]]+)\\]\\]");
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
-        Link link = Link::link_from_raw(_vault, ms);
+        Link link = Link::link_from_raw(_vault, ms, this);
 
         content = content.substr(0, m.position()) + link.hugo_markdown_link(_vault, hugo_path) +
                             content.substr(m.position() + m.length());
@@ -136,4 +138,40 @@ std::vector<path> Converter::_get_excluded() {
     cout << endl;
 
     return paths;
+}
+
+Finding Converter::_find_file(path dir, string name) {
+    name = linkify(name);
+    for (const auto &file : std::filesystem::directory_iterator(dir)) {
+        if (file.is_directory()) {
+            Finding finding = _find_file(file.path(), name);
+            if (finding.was_found())
+                return finding;
+        } else {
+            string filename = linkify(file.path().filename());
+
+            if (filename[0] == '/') filename = filename.substr(1);
+
+            if (filename == name) {
+                return Finding(file.path());
+            }
+        }
+    }
+    return Finding("");
+}
+
+
+path Converter::find_file(string name) {
+
+    name = ((path) name).filename().string(); // Isolate filename
+
+    Finding finding = _find_file(_vault, name);
+
+    if (finding.was_found()) {
+        return ((path) finding.get_finding()).lexically_relative(_vault);
+    } else {
+        cout << "WARNING: coud not find link \'" << name << "\'" << endl; 
+
+        return ""; // TODO Make this not create a link.
+    }
 }

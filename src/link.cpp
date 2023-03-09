@@ -1,7 +1,7 @@
 #include "link.hpp"
+#include "converter.hpp"
 
 // TODO
-path find_file_in_vault(path vault, string name);
 string linkify(path link_path);
 
 Link::Link(string name, path link, string chapter) : _name(name), _link(link), _chapter(chapter) {
@@ -9,7 +9,7 @@ Link::Link(string name, path link, string chapter) : _name(name), _link(link), _
     _no_destination = link == "";
 }
 
-Link Link::link_from_raw(path vault, string full_input){
+Link Link::link_from_raw(path vault, string full_input, Converter* converter){
 
     // -> link#chapter|name
     path link;
@@ -22,22 +22,22 @@ Link Link::link_from_raw(path vault, string full_input){
     bool hash = hash_index != -1;
 
     if (!bar and !hash){
-        link = find_file_in_vault(vault, full_input);
+        link = converter->find_file(full_input);
         name = full_input;
         chapter = "";
     }
     else if (bar and !hash) {
-        link = find_file_in_vault(vault, full_input.substr(0, bar_index));
+        link = converter->find_file(full_input.substr(0, bar_index));
         name = full_input.substr(bar_index + 1);
         chapter = "";
     }
     else if (!bar and hash) { // TODO handle local links
-        link = find_file_in_vault(vault, full_input.substr(0, hash_index));
+        link = converter->find_file(full_input.substr(0, hash_index));
         chapter = full_input.substr(hash_index + 1);
         name = full_input;
     }
     else if (bar and hash) {
-        link = find_file_in_vault(vault, full_input.substr(0, hash_index));
+        link = converter->find_file(full_input.substr(0, hash_index));
         chapter = full_input.substr(hash_index + 1, bar_index);
         name = full_input.substr(bar_index + 1);
     }
