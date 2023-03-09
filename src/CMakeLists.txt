@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Add main.cpp file of project root directory as source file
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES main.cpp finding.cpp link.cpp converter.cpp)
 
 # Add executable target with source files listed in SOURCE_FILES variable
 add_executable(main ${SOURCE_FILES})

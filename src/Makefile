@@ -129,6 +129,78 @@ main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
+converter.o: converter.cpp.o
+.PHONY : converter.o
+
+# target to build an object file
+converter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/converter.cpp.o
+.PHONY : converter.cpp.o
+
+converter.i: converter.cpp.i
+.PHONY : converter.i
+
+# target to preprocess a source file
+converter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/converter.cpp.i
+.PHONY : converter.cpp.i
+
+converter.s: converter.cpp.s
+.PHONY : converter.s
+
+# target to generate assembly for a file
+converter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/converter.cpp.s
+.PHONY : converter.cpp.s
+
+finding.o: finding.cpp.o
+.PHONY : finding.o
+
+# target to build an object file
+finding.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/finding.cpp.o
+.PHONY : finding.cpp.o
+
+finding.i: finding.cpp.i
+.PHONY : finding.i
+
+# target to preprocess a source file
+finding.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/finding.cpp.i
+.PHONY : finding.cpp.i
+
+finding.s: finding.cpp.s
+.PHONY : finding.s
+
+# target to generate assembly for a file
+finding.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/finding.cpp.s
+.PHONY : finding.cpp.s
+
+link.o: link.cpp.o
+.PHONY : link.o
+
+# target to build an object file
+link.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/link.cpp.o
+.PHONY : link.cpp.o
+
+link.i: link.cpp.i
+.PHONY : link.i
+
+# target to preprocess a source file
+link.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/link.cpp.i
+.PHONY : link.cpp.i
+
+link.s: link.cpp.s
+.PHONY : link.s
+
+# target to generate assembly for a file
+link.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/link.cpp.s
+.PHONY : link.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -162,6 +234,15 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... main"
+	@echo "... converter.o"
+	@echo "... converter.i"
+	@echo "... converter.s"
+	@echo "... finding.o"
+	@echo "... finding.i"
+	@echo "... finding.s"
+	@echo "... link.o"
+	@echo "... link.i"
+	@echo "... link.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
