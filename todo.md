@@ -1,6 +1,4 @@
 # TODO
-- [ ] Note class?
-- [ ] Backlinks
 - [ ] Tags
 
 # Script
