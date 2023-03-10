@@ -73,7 +73,7 @@ bool Converter::_is_excluded(path file_path){
 }
 
 string Converter::_add_header(path file_path, string contents){
-    string header = "---\ntitle: " + file_path.stem().string() + "\n---\n\n";
+    string header = "---\ntype: note\ntitle: " + file_path.stem().string() + "\n---\n\n";
     return header + contents;
 } 
 
