@@ -34,17 +34,35 @@ void Converter::convert_vault(path out_dir) {
         write_file(_hugo_root / "content" / _content_dir / note->getVaultPath(), hugo_contents);
     }
 
-    cout << endl << endl;
-
+    cout << "\nAdding backlinks..." << endl;
     //Add backlinks
     for (int i = 0; i < _notes.size(); i++){
-        Note* note = &_notes[i];
-        cout << "Backlinks for: " << note->getVaultPath() << " : " << note << endl;
-        for (Note* backlink : note->getBacklinks()){
-            cout << "\t" << backlink->getVaultPath() << endl;
-        }
-        cout << endl;
+        _addBacklinks(&_notes[i]);
     }
+}
+
+void Converter::_addBacklinks(Note* note){
+    cout << note->getVaultPath() << endl;
+
+    string yaml_backlinks = "backlinks: [";
+
+    for (Note* backlink : note->getBacklinks()) {
+        cout << "\t" << backlink->getVaultPath() << endl;
+        string yaml_backlink = linkify(backlink->getVaultPath().string());
+        yaml_backlinks += "/" + yaml_backlink + ", ";
+    }
+    yaml_backlinks = yaml_backlinks.substr(0, yaml_backlinks.length()-2) + "]";
+
+    path hugo_file_path = _hugo_root / "content" / _content_dir / note->getVaultPath();
+    string content = read_file(hugo_file_path);
+
+    int first_return = content.find("\n");
+
+    content = content.substr(0, first_return) +
+        "\n" + yaml_backlinks +
+        content.substr(first_return);
+
+    write_file(hugo_file_path, content);
 }
 
 bool Converter::_is_excluded(path file_path){
@@ -55,7 +73,7 @@ bool Converter::_is_excluded(path file_path){
 }
 
 string Converter::_add_header(path file_path, string contents){
-    string header = "---\ntitle: " + file_path.stem().string() + "\n---";
+    string header = "---\ntitle: " + file_path.stem().string() + "\n---\n\n";
     return header + contents;
 } 
 

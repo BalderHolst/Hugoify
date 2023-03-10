@@ -27,6 +27,7 @@ class Converter {
     Finding _find_file(path dir, string name);
     vector<Note> _findNotes(path dir);
     Note* _getNote(path vault_path);
+    void _addBacklinks(Note* note);
 
 public:
     Converter(path vault, path hugo_root, path content_dir = "notes");

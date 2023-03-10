@@ -37,6 +37,7 @@ string linkify(path link_path) {
 
 
 
+// TODO handle path not exists
 // Copy pasted code...
 string read_file(std::string path) {
     constexpr auto read_size = std::size_t(4096);

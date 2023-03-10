@@ -17,7 +17,6 @@ path Note::getVaultPath() {
 }
 
 void Note::addBacklink(Note* note_ref){
-    std::cout << "Adding backlink" << note_ref->getVaultPath() << " to " << getVaultPath() << " : " << this << std::endl;
     _backlinks.push_back(note_ref);
 }
 
