@@ -4,7 +4,7 @@
 // TODO
 string linkify(path link_path);
 
-Link::Link(string name, path link, string chapter) : _name(name), _link(link), _chapter(chapter) {
+Link::Link(string name, path link, string chapter) : _name(name), _vault_path(link), _chapter(chapter) {
     if (name == "") _name = link;
     _no_destination = link == "";
 }
@@ -44,9 +44,9 @@ Link Link::link_from_raw(path vault, string full_input, Converter* converter){
     return Link(name, link, chapter);
 }
 
-string Link::hugo_markdown_link(path vault, path hugo_path) { 
+string Link::hugo_markdown_link(path hugo_vault_path) { 
     if (has_destination()) {
-        string link = hugo_path.string() + "/" + linkify(_link);
+        string link = hugo_vault_path.string() + "/" + linkify(_vault_path);
         return "[" + _name + "](/" + link + ")"; 
     }
     else {
@@ -58,3 +58,6 @@ bool Link::has_destination(){
     return !_no_destination;
 }
 
+path Link::getVaultPath(){
+    return _vault_path;
+}

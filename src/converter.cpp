@@ -25,6 +25,28 @@ Converter::Converter(path vault, path hugo_root, path content_dir) : _vault(vaul
     _notes = _findNotes(vault);
 }
 
+void Converter::convert_vault(path out_dir) {
+    fs::remove_all(out_dir);
+    for (int i = 0; i < _notes.size(); i++){
+        Note* note = &_notes[i];
+        path obsidian_path = _vault / note->getVaultPath();
+        string hugo_contents = _obsidian_to_hugo(note);
+        write_file(_hugo_root / "content" / _content_dir / note->getVaultPath(), hugo_contents);
+    }
+
+    cout << endl << endl;
+
+    //Add backlinks
+    for (int i = 0; i < _notes.size(); i++){
+        Note* note = &_notes[i];
+        cout << "Backlinks for: " << note->getVaultPath() << " : " << note << endl;
+        for (Note* backlink : note->getBacklinks()){
+            cout << "\t" << backlink->getVaultPath() << endl;
+        }
+        cout << endl;
+    }
+}
+
 bool Converter::_is_excluded(path file_path){
     for (path excluded_path : _excluded_paths) {
         if (file_path == excluded_path) return true;
@@ -32,20 +54,10 @@ bool Converter::_is_excluded(path file_path){
     return false;
 }
 
-void Converter::convert_vault(path out_dir) {
-    fs::remove_all(out_dir);
-    /* _convert_dir(_vault, out_dir, hugo_path); */
-    for (Note note : _notes){
-        path obsidian_path = _vault / note.getRelativePath();
-        string hugo_contents = _obsidian_to_hugo(note);
-        write_file(_hugo_root / "content" / _content_dir / note.getRelativePath(), hugo_contents);
-    }
-}
-
 string Converter::_add_header(path file_path, string contents){
     string header = "---\ntitle: " + file_path.stem().string() + "\n---";
     return header + contents;
-}
+} 
 
 // TODO optimise...
 string Converter::_double_newlines(string content){
@@ -58,26 +70,40 @@ string Converter::_double_newlines(string content){
     return content;
 }
 
-string Converter::_obsidian_to_hugo(Note note) {
-    path obsidian_path = _vault / note.getRelativePath();
+string Converter::_obsidian_to_hugo(Note* note) {
+    path obsidian_path = _vault / note->getVaultPath();
     string content = read_file(obsidian_path);
 
     cout << "Scraping content from: " << obsidian_path.string() << endl;
-    content = _hugoify_links(content);
+    content = _hugoify_links(note, content);
     content = _double_newlines(content);
 
     content = _add_header(obsidian_path, content);
     return content;
 }
 
-string Converter::_hugoify_links(string content) {
+Note* Converter::_getNote(path vault_path){
+    /* cout << "Getting note: " << vault_path << endl; */
+    for (int i = 0; i < _notes.size(); i++) {
+        Note* note = &_notes[i];
+        if (note->getVaultPath() == vault_path) {
+            return note;
+        }
+    }
+    cout << "ERROR: could not find note: " << vault_path << endl;
+    assert(false); // TODO return nullpointer??
+}
+
+string Converter::_hugoify_links(Note* note, string content) {
     std::smatch m;
     std::regex r("\\[\\[([^\\[\\]]+)\\]\\]");
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
         Link link = Link::link_from_raw(_vault, ms, this);
-        content = content.substr(0, m.position()) + link.hugo_markdown_link(_vault, _content_dir) +
+        content = content.substr(0, m.position()) + link.hugo_markdown_link(_content_dir) +
                             content.substr(m.position() + m.length());
+
+        note->addBacklink(_getNote(link.getVaultPath()));
     }
     return content;
 }

@@ -4,13 +4,14 @@
 #include <filesystem>
 
 #include "converter.hpp"
+#include "note.hpp"
 
 using std::string;
 using std::filesystem::path;
 
 class Link {
     bool _no_destination;
-    path _link;
+    path _vault_path;
     string _name;
     string _chapter;
 
@@ -18,8 +19,9 @@ class Link {
         Link(string name, path link, string chapter = "");
         static Link link_from_raw(path vault, string full_input, Converter* converter);
         path hugo_link(path hugo_path);
-        string hugo_markdown_link(path vault, path hugo_path);
+        string hugo_markdown_link(path hugo_vault_path);
         bool has_destination();
+        path getVaultPath();
 };
 
 #endif // !LINK_INCLUDES

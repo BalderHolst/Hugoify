@@ -3,18 +3,21 @@
 #include <filesystem>
 #include <vector>
 
+#include <iostream>
+
 using std::filesystem::path;
 using std::vector;
 
 Note::Note(path vault, path obsidian_path) {
-    _relative_path = obsidian_path.lexically_relative(vault);
+    _vault_path = obsidian_path.lexically_relative(vault);
 }
 
-path Note::getRelativePath() {
-    return _relative_path;
+path Note::getVaultPath() {
+    return _vault_path;
 }
 
 void Note::addBacklink(Note* note_ref){
+    std::cout << "Adding backlink" << note_ref->getVaultPath() << " to " << getVaultPath() << " : " << this << std::endl;
     _backlinks.push_back(note_ref);
 }
 

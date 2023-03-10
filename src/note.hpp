@@ -9,13 +9,13 @@ using std::filesystem::path;
 using std::vector;
 
 class Note {
-    path _relative_path;
+    path _vault_path;
     path _hugo_path;
     vector<Note*> _backlinks;
 
 public:
     Note(path vault, path obsidian_path);
-    path getRelativePath();
+    path getVaultPath();
     void addBacklink(Note* note_ref);
     vector<Note*> getBacklinks();
 };
