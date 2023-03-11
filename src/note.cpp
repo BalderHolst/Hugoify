@@ -27,7 +27,7 @@ path Note::getHugoVaultPath() {
 }
 
 void Note::addBacklink(Note* note_ref){
-    _backlinks.push_back(note_ref);
+    note_ref->_backlinks.push_back(this);
 }
 
 vector<Note*> Note::getBacklinks(){
