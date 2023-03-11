@@ -72,7 +72,7 @@ string Link::hugo_markdown_link(path hugo_vault_path) {
 string Link::new_tab_link(path hugo_vault_path){
     if (has_destination()) {
         string link = hugo_vault_path / linkify(_vault_path);
-        return "{{< note_attachment name=\"" + _name + "\" link=\"/" + link  + "\" >}}";
+        return "{{< note_attachment name=\"" + _name + "\" link=\"/" + link  + "#" + _chapter + "\" >}}";
     }
     else {
         return _name;

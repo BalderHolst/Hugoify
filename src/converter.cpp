@@ -138,7 +138,9 @@ string Converter::_hugoify_links(Note* note, string content) {
         else if (vault_path != "") {
             path hugo_path = _hugo_root / "static" / _content_dir / linkify(vault_path);
             fs::create_directories(hugo_path.parent_path());
-            fs::copy_file(_vault / vault_path, hugo_path);
+
+            if (!fs::exists(hugo_path)) fs::copy_file(_vault / vault_path, hugo_path);
+
             text_link = link.new_tab_link(_content_dir);
         }
         else {
