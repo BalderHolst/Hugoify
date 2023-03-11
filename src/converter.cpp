@@ -84,13 +84,17 @@ string Converter::_add_header(path file_path, string contents){
     return header + contents;
 } 
 
-// TODO optimise...
 string Converter::_double_newlines(string content){
-    for (int i = content.length(); i >= 0; i--) {
-        if (content[i] == '\n'){
-            content = content.substr(0, i) + "\n" + content.substr(i);
-            i--;
+    bool codeblock = false;
+    for (int pos = content.find('\n'); pos != -1; pos = content.find('\n', pos + 1)) {
+        if (pos > 0 && content[pos - 1] == '|') continue; // if table
+        else if (codeblock) continue;
+        else if (pos+3 < content.length()  && content[pos+1] == '`' && content[pos+2] == '`' && content[pos+3] == '`') {
+            codeblock = !codeblock;
+            continue;
         }
+        content = content.substr(0, pos) + '\n' + content.substr(pos);
+        pos++;
     }
     return content;
 }
