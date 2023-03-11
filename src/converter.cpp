@@ -25,13 +25,20 @@ Converter::Converter(path vault, path hugo_root, path content_dir) : _vault(vaul
     _notes = _findNotes(vault);
 }
 
+string spacesToDashes(string s){
+    for (int i = 0; i < s.length(); i++) {
+        if (s[i] == ' ') s[i] = '-';
+    }
+    return s;
+}
+
 void Converter::convert_vault(path out_dir) {
     fs::remove_all(out_dir);
     for (int i = 0; i < _notes.size(); i++){
         Note* note = &_notes[i];
         path obsidian_path = _vault / note->getVaultPath();
         string hugo_contents = _obsidian_to_hugo(note);
-        write_file(_hugo_root / "content" / _content_dir / note->getVaultPath(), hugo_contents);
+        write_file(spacesToDashes(_hugo_root / "content" / _content_dir / note->getVaultPath()), hugo_contents);
     }
 
     cout << "\nAdding backlinks..." << endl;
@@ -53,7 +60,7 @@ void Converter::_addBacklinks(Note* note){
     }
     yaml_backlinks = yaml_backlinks.substr(0, yaml_backlinks.length()-2) + "]";
 
-    path hugo_file_path = _hugo_root / "content" / _content_dir / note->getVaultPath();
+    path hugo_file_path = spacesToDashes(_hugo_root / "content" / _content_dir / note->getVaultPath());
     string content = read_file(hugo_file_path);
 
     int first_return = content.find("\n");
