@@ -31,6 +31,11 @@ path Note::getHugoVaultPath() {
 }
 
 void Note::addBacklink(Note* note_ref){
+
+    // Remove duplicates
+    for (auto b : note_ref->_backlinks) 
+        if (b->getVaultPath() == getVaultPath()) return;
+
     note_ref->_backlinks.push_back(this);
 }
 
