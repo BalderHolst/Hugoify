@@ -87,7 +87,6 @@ string Converter::_obsidian_to_hugo(Note* note) {
 
     cout << "Scraping content from: " << obsidian_path.string() << endl;
     content = _hugoify_links(note, content);
-    content = _double_newlines(content);
     content = _format_latex(content);
 
     content = _add_header(obsidian_path, content);
@@ -98,22 +97,6 @@ string Converter::_add_header(path file_path, string contents){
     string header = "---\ntype: note\ntitle: " + file_path.stem().string() + "\n---\n\n";
     return header + contents;
 } 
-
-string Converter::_double_newlines(string content){
-    bool codeblock = false;
-    for (int pos = content.find('\n'); pos != -1; pos = content.find('\n', pos + 1)) {
-        if (pos > 0 && content[pos - 1] == '|') continue; // if table
-        else if (codeblock) continue;
-        else if (pos+3 < content.length()  && content[pos+1] == '`' && content[pos+2] == '`' && content[pos+3] == '`') {
-            codeblock = !codeblock;
-            continue;
-        }
-        else if (pos+1 < content.length() && content[pos+1] == '>') continue;
-        content = content.substr(0, pos) + '\n' + content.substr(pos);
-        pos++;
-    }
-    return content;
-}
 
 string Converter::_format_latex(string content){
     const string search_string = "$$";
