@@ -105,10 +105,18 @@ string Converter::_format_latex(string content){
         pos = content.find(search_string, pos + 2);
         int end = pos;
 
-        for (int latex_pos = content.find("\\\\"); latex_pos != -1 && latex_pos < end; latex_pos = content.find("\\\\", latex_pos + 3)) {
+        for (int latex_pos = content.find("\\\\", begin); latex_pos != -1 && latex_pos < end; latex_pos = content.find("\\\\", latex_pos + 3)) {
             content = content.substr(0, latex_pos + 1) + "newline" + content.substr(latex_pos + 2);
         }
     }
+
+    // Add needed newlines for inline math
+    for (int latex_pos = content.find("\n$"); latex_pos != -1; latex_pos = content.find("\n$", latex_pos + 3)) {
+        if (content[latex_pos + 2] == '$') continue;
+        content = content.substr(0, latex_pos) + "\n" + content.substr(latex_pos);
+        latex_pos++;
+    }
+
     return content;
 }
 
