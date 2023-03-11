@@ -16,6 +16,7 @@ class Note {
 public:
     Note(path vault, path obsidian_path);
     path getVaultPath();
+    path getHugoVaultPath();
     void addBacklink(Note* note_ref);
     vector<Note*> getBacklinks();
 };
