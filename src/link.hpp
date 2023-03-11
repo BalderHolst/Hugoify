@@ -21,8 +21,10 @@ class Link {
         static Link link_from_raw(path vault, string full_input, Converter* converter);
         path hugo_link(path hugo_path);
         string hugo_markdown_link(path hugo_vault_path);
+        string new_tab_link(path hugo_vault_path);
         bool has_destination();
         path getVaultPath();
+        string getName();
 };
 
 #endif // !LINK_INCLUDES

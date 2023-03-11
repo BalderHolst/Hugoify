@@ -61,8 +61,18 @@ Link Link::link_from_raw(path vault, string full_input, Converter* converter){
 
 string Link::hugo_markdown_link(path hugo_vault_path) { 
     if (has_destination()) {
-        string link = hugo_vault_path.string() + "/" + linkify(_vault_path);
+        string link = hugo_vault_path / linkify(_vault_path);
         return "[" + _name + "](/" + link + ")"; 
+    }
+    else {
+        return _name;
+    }
+}
+
+string Link::new_tab_link(path hugo_vault_path){
+    if (has_destination()) {
+        string link = hugo_vault_path / linkify(_vault_path);
+        return "{{< note_attachment name=\"" + _name + "\" link=\"/" + link  + "\" >}}";
     }
     else {
         return _name;
@@ -75,4 +85,8 @@ bool Link::has_destination(){
 
 path Link::getVaultPath(){
     return _vault_path;
+}
+
+string Link::getName() {
+    return _name;
 }

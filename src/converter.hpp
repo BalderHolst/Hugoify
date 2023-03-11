@@ -21,17 +21,17 @@ class Converter {
     std::vector<path> _get_excluded(); 
 	string _hugoify_links(Note* note, string content);
 	string _obsidian_to_hugo(Note* note);
-    string _double_newlines(string content);
     string _add_header(path file_path, string contents);
     bool _is_excluded(path file_path);
     Finding _find_file(path dir, string name);
     vector<Note> _findNotes(path dir);
     Note* _getNote(path vault_path);
     void _addBacklinks(Note* note);
+    string _double_newlines(string content);
 
 public:
     Converter(path vault, path hugo_root, path content_dir = "notes");
-    void convert_vault(path out_dir);
+    void convert_vault();
     path find_file(string name);
 };
 

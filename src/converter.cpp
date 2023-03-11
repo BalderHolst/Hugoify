@@ -25,8 +25,9 @@ Converter::Converter(path vault, path hugo_root, path content_dir) : _vault(vaul
     _notes = _findNotes(vault);
 }
 
-void Converter::convert_vault(path out_dir) {
-    fs::remove_all(out_dir);
+void Converter::convert_vault() {
+    fs::remove_all(_hugo_root / "content" / _content_dir);
+    fs::remove_all(_hugo_root / "static" / _content_dir);
     for (int i = 0; i < _notes.size(); i++){
         Note* note = &_notes[i];
         path obsidian_path = _vault / note->getVaultPath();
@@ -114,8 +115,8 @@ Note* Converter::_getNote(path vault_path){
             return note;
         }
     }
-    cout << "ERROR: could not find note: " << vault_path << endl;
-    assert(false); // TODO return nullpointer??
+    cout << "WARNING: could not find note: " << vault_path << endl;
+    return nullptr;
 }
 
 string Converter::_hugoify_links(Note* note, string content) {
@@ -124,10 +125,30 @@ string Converter::_hugoify_links(Note* note, string content) {
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
         Link link = Link::link_from_raw(_vault, ms, this);
-        content = content.substr(0, m.position()) + link.hugo_markdown_link(_content_dir) +
+
+        path vault_path = link.getVaultPath();
+        Note* bnote = _getNote(vault_path);
+
+        string text_link;
+
+        if (bnote != nullptr) {
+            note->addBacklink(bnote);
+            text_link = link.hugo_markdown_link(_content_dir);
+        }
+        else if (vault_path != "") {
+            path hugo_path = _hugo_root / "static" / _content_dir / linkify(vault_path);
+            fs::create_directories(hugo_path.parent_path());
+            fs::copy_file(_vault / vault_path, hugo_path);
+            text_link = link.new_tab_link(_content_dir);
+        }
+        else {
+            std::cout << "WARNING: Removing link: " << link.getName() << std::endl;
+            text_link = link.getName();
+        }
+
+        content = content.substr(0, m.position()) + text_link +
                             content.substr(m.position() + m.length());
 
-        note->addBacklink(_getNote(link.getVaultPath()));
     }
     return content;
 }
@@ -216,7 +237,7 @@ path Converter::find_file(string name) {
     if (finding.was_found()) {
         return ((path) finding.get_finding()).lexically_relative(_vault);
     } else {
-        cout << "WARNING: coud not find link \'" << name << "\'" << endl; 
+        cout << "WARNING: could not find link \'" << name << "\'" << endl; 
 
         return ""; // TODO Make this not create a link.
     }

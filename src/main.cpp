@@ -69,12 +69,12 @@ void write_file(path file_path, string contents) {
 
 int main(int argc, char *argv[]) {
 	/* path vault_path = "/home/balder/Documents/uni/noter"; */
-	path vault_path = "/home/balder/projects/hugo-vault/test_vault";
+	path vault_path = "/home/balder/projects/hugo-vault/tests/test-vault";
 	path out_dir = "/home/balder/projects/website/content/notes";
 	path hugo_path = "/home/balder/projects/website";
 
 
     Converter c = Converter(vault_path, hugo_path);
-    c.convert_vault(out_dir);
+    c.convert_vault();
 	return 0;
 }
