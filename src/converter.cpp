@@ -28,6 +28,7 @@ Converter::Converter(path vault, path hugo_root, path content_dir) : _vault(vaul
 void Converter::convert_vault() {
     fs::remove_all(_hugo_root / "content" / _content_dir);
     fs::remove_all(_hugo_root / "static" / _content_dir);
+
     for (int i = 0; i < _notes.size(); i++){
         Note* note = &_notes[i];
         path obsidian_path = _vault / note->getVaultPath();
@@ -50,6 +51,7 @@ void Converter::_addBacklinks(Note* note){
     auto backlinks = note->getBacklinks();
     if (backlinks.size() > 0) {
         for (Note* backlink : backlinks) {
+            if (_is_excluded(_vault / backlink->getVaultPath())) continue;
             cout << "\t" << backlink->getVaultPath() << endl;
             string yaml_backlink = linkify(backlink->getVaultPath().string());
             yaml_backlinks += "/" + yaml_backlink + ", ";
@@ -93,6 +95,7 @@ string Converter::_double_newlines(string content){
             codeblock = !codeblock;
             continue;
         }
+        else if (pos+1 < content.length() && content[pos+1] == '>') continue;
         content = content.substr(0, pos) + '\n' + content.substr(pos);
         pos++;
     }
@@ -203,7 +206,8 @@ vector<Note> Converter::_findNotes(path dir){
 
     for (const auto &file : std::filesystem::directory_iterator(dir)) {
         path file_path = file.path();
-        if (file.is_directory()) {
+        if (_is_excluded(file_path)) continue;
+        else if (file.is_directory()) {
             for (Note note : _findNotes(file_path)) notes.push_back(note);
         } else if (file_path.extension() == ".md") {
             notes.push_back(Note(_vault, file_path));
