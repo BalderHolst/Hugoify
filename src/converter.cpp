@@ -81,6 +81,19 @@ bool Converter::_is_excluded(path file_path){
     return false;
 }
 
+string Converter::_obsidian_to_hugo(Note* note) {
+    path obsidian_path = _vault / note->getVaultPath();
+    string content = read_file(obsidian_path);
+
+    cout << "Scraping content from: " << obsidian_path.string() << endl;
+    content = _hugoify_links(note, content);
+    content = _double_newlines(content);
+    content = _format_latex(content);
+
+    content = _add_header(obsidian_path, content);
+    return content;
+}
+
 string Converter::_add_header(path file_path, string contents){
     string header = "---\ntype: note\ntitle: " + file_path.stem().string() + "\n---\n\n";
     return header + contents;
@@ -102,15 +115,17 @@ string Converter::_double_newlines(string content){
     return content;
 }
 
-string Converter::_obsidian_to_hugo(Note* note) {
-    path obsidian_path = _vault / note->getVaultPath();
-    string content = read_file(obsidian_path);
+string Converter::_format_latex(string content){
+    const string search_string = "$$";
+    for (int pos = content.find(search_string); pos != -1; pos = content.find(search_string, pos + 2)) {
+        int begin = pos;
+        pos = content.find(search_string, pos + 2);
+        int end = pos;
 
-    cout << "Scraping content from: " << obsidian_path.string() << endl;
-    content = _hugoify_links(note, content);
-    content = _double_newlines(content);
-
-    content = _add_header(obsidian_path, content);
+        for (int latex_pos = content.find("\\\\"); latex_pos != -1 && latex_pos < end; latex_pos = content.find("\\\\", latex_pos + 3)) {
+            content = content.substr(0, latex_pos + 1) + "newline" + content.substr(latex_pos + 2);
+        }
+    }
     return content;
 }
 

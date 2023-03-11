@@ -28,6 +28,7 @@ class Converter {
     Note* _getNote(path vault_path);
     void _addBacklinks(Note* note);
     string _double_newlines(string content);
+    string _format_latex(string content);
 
 public:
     Converter(path vault, path hugo_root, path content_dir = "notes");
