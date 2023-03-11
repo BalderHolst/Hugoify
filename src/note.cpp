@@ -21,7 +21,11 @@ path Note::getVaultPath() {
 path Note::getHugoVaultPath() {
     string s = _vault_path;
     for (int i = 0; i < s.length(); i++) {
-        if (s[i] == ' ') s[i] = '-';
+        switch (s[i]) {
+            case ' ': s[i] = '-'; break;
+            case '(':
+            case ')': s = s.substr(0, i) + s.substr(i + 1); break;
+        }
     }
     return s;
 }
