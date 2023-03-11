@@ -25,6 +25,8 @@ path Note::getHugoVaultPath() {
             case ' ': s[i] = '-'; break;
             case '(':
             case ')': s = s.substr(0, i) + s.substr(i + 1); break;
+            case '\'': 
+            case '\"': s[i] = '-'; break;
         }
     }
     return s;

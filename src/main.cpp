@@ -1,6 +1,4 @@
-
 #include "converter.hpp"
-#include "link.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -29,6 +27,8 @@ string linkify(path link_path) {
             case ' ': link[i] = '-'; break;
             case '(':
             case ')': link = link.substr(0, i) + link.substr(i + 1); break;
+            case '\"': link[i] = '-';
+            case '\'': link[i] = '-';
         }
     }
 
@@ -69,7 +69,7 @@ void write_file(path file_path, string contents) {
 
 int main(int argc, char *argv[]) {
 	/* path vault_path = "/home/balder/Documents/uni/noter"; */
-	path vault_path = "/home/balder/Documents/uni/noter-test";
+	path vault_path = "/home/balder/Documents/uni/noter";
 	path out_dir = "/home/balder/projects/website/content/notes";
 	path hugo_path = "/home/balder/projects/website";
 
