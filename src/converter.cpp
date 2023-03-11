@@ -53,12 +53,18 @@ void Converter::_addBacklinks(Note* note){
 
     string yaml_backlinks = "backlinks: [";
 
-    for (Note* backlink : note->getBacklinks()) {
-        cout << "\t" << backlink->getVaultPath() << endl;
-        string yaml_backlink = linkify(backlink->getVaultPath().string());
-        yaml_backlinks += "/" + yaml_backlink + ", ";
+    auto backlinks = note->getBacklinks();
+    if (backlinks.size() > 0) {
+        for (Note* backlink : backlinks) {
+            cout << "\t" << backlink->getVaultPath() << endl;
+            string yaml_backlink = linkify(backlink->getVaultPath().string());
+            yaml_backlinks += "/" + yaml_backlink + ", ";
+        }
+        yaml_backlinks = yaml_backlinks.substr(0, yaml_backlinks.length()-2) + "]";
     }
-    yaml_backlinks = yaml_backlinks.substr(0, yaml_backlinks.length()-2) + "]";
+    else {
+        yaml_backlinks += "]";
+    }
 
     path hugo_file_path = spacesToDashes(_hugo_root / "content" / _content_dir / note->getVaultPath());
     string content = read_file(hugo_file_path);
