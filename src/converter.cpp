@@ -120,7 +120,7 @@ Note* Converter::_getNote(path vault_path){
 
 string Converter::_hugoify_links(Note* note, string content) {
     std::smatch m;
-    std::regex r("\\[\\[([^\\[\\]]+)\\]\\]");
+    std::regex r("(!?\\[\\[[^\\[\\]]+\\]\\])");
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
         Link link = Link::link_from_raw(_vault, ms, this);
