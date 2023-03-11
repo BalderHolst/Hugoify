@@ -76,7 +76,7 @@ void Converter::_addBacklinks(Note* note){
 
 bool Converter::_is_excluded(path file_path){
     for (path excluded_path : _excluded_paths) {
-        if (file_path == excluded_path) return true;
+        if (file_path.lexically_relative(excluded_path) == file_path.filename()) return true;
     }
     return false;
 }
@@ -144,7 +144,7 @@ string Converter::_hugoify_links(Note* note, string content) {
             path hugo_path = _hugo_root / "static" / _content_dir / linkify(vault_path);
             fs::create_directories(hugo_path.parent_path());
 
-            if (!fs::exists(hugo_path)) fs::copy_file(_vault / vault_path, hugo_path);
+            if (!fs::exists(hugo_path) && !_is_excluded(_vault / vault_path)) fs::copy_file(_vault / vault_path, hugo_path);
 
             text_link = link.new_tab_link(_content_dir);
         }

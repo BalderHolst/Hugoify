@@ -1,5 +1,4 @@
 #include "note.hpp"
-#include "finding.hpp"
 
 #include <filesystem>
 #include <vector>
