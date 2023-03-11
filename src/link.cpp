@@ -1,8 +1,6 @@
 #include "link.hpp"
 #include "converter.hpp"
 
-#include <iostream>
-
 
 // TODO
 string linkify(path link_path);
@@ -25,7 +23,6 @@ Link Link::link_from_raw(path vault, string full_input, Converter* converter){
     if (full_input[0] == '!'){
         shown = true;
         full_input = full_input.substr(1);
-        std::cout << "!SHOWN!" << std::endl;
     }
 
     full_input = full_input.substr(2, full_input.length() - 4); // idk why it has to be 4 and not 2, but this works.
