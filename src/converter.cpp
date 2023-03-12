@@ -97,15 +97,32 @@ string Converter::_obsidian_to_hugo(Note* note) {
 }
 
 vector<string> Converter::_extract_tags(string* content){
+
     vector<string> tags = {};
+    vector<int> hash_locations = {};
+    bool in_codeblock = false;
+    int content_ptr = 0;
+    int hash_location;
 
     std::smatch m;
     std::regex r("(---)?(\\n|\\s)#([^\\s#]+)");
     while (std::regex_search(*content, m, r)) {
-        tags.push_back(m[3].str());
-        *content = content->substr(0, m.position()) +  content->substr(m.position() + m.length());
+        for (; content_ptr < m.position(); content_ptr++) {
+            if ((*content)[content_ptr] == '`') in_codeblock = !in_codeblock;
+        }
+        if (in_codeblock) {
+            hash_location = content_ptr + m[1].length() + 1;
+            (*content)[hash_location] = ' '; // add replace tag to not match here anymore
+            hash_locations.push_back(hash_location);
+        }
+        else{ 
+            tags.push_back(m[3].str());
+            *content = content->substr(0, content_ptr) + content->substr(content_ptr + m.length());
+        }
     }
-
+    for (int l : hash_locations){ // Re-insert hashtags
+        (*content)[l] = '#';
+    }
     return tags;
 }
 
