@@ -99,7 +99,7 @@ vector<string> Converter::_extract_tags(string* content){
     vector<string> tags = {};
 
     std::smatch m;
-    std::regex r("(---)?(\\n|\\s)#(\\w+)");
+    std::regex r("(---)?(\\n|\\s)#(\\w+)\n?");
     while (std::regex_search(*content, m, r)) {
         *content = content->substr(0, m.position()) + content->substr(m.position() + m.length());
         tags.push_back(m[3]);
