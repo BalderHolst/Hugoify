@@ -1,7 +1,7 @@
 # TODO
 - [ ] Tags
-- [ ] Parse preample.sty for newcommand
 - [ ] Dataview
+- [ ] Fix exclude HJEM.md
 
 # Script
 - [ ] Change martixes to work with hugo
