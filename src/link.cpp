@@ -65,7 +65,8 @@ string Link::_chapterId(){
     for (int i = c.length(); i >= 0; i--) {
         c[i] = std::tolower(c[i]);
         switch (c[i]) {
-            case '.': c = c.substr(0, i) + c.substr(i + 1);
+            case '.': c = c.substr(0, i) + c.substr(i + 1); break;
+            case ' ': c[i] = '-';
         }
     }
     return c;
