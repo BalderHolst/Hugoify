@@ -1,7 +1,7 @@
 # TODO
 - [ ] Dataview
 - [ ] Fix exclude HJEM.md
-- [ ] Chapter links
+- [ ] Fix _extract_tags in codeblocks
 
 # Script
 - [ ] Change martixes to work with hugo
