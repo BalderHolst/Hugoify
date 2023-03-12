@@ -1,6 +1,8 @@
 #include "link.hpp"
 #include "converter.hpp"
 
+#include <cctype>
+#include <iostream>
 
 // TODO
 string linkify(path link_path);
@@ -12,7 +14,6 @@ Link::Link(string name, path link, string chapter, bool shown) :
     _shown(shown)
 {
     if (name == "") _name = link;
-    _no_destination = link == "";
 }
 
 Link Link::link_from_raw(path vault, string full_input, Converter* converter){
@@ -59,9 +60,27 @@ Link Link::link_from_raw(path vault, string full_input, Converter* converter){
     return Link(name, link, chapter, shown);
 }
 
+string Link::_chapterId(){
+    string c = _chapter;
+    for (int i = c.length(); i >= 0; i--) {
+        c[i] = std::tolower(c[i]);
+        switch (c[i]) {
+            case '.': c = c.substr(0, i) + c.substr(i + 1);
+        }
+    }
+    return c;
+}
+
+string Link::hugo_local_markdown_link(string hugo_vault_path, Note* this_note){
+    return "[" + _chapter + "](/" + hugo_vault_path + "/" + linkify(this_note->getVaultPath()) + "#" + _chapterId() + ")"; 
+}
+
 string Link::hugo_markdown_link(path hugo_vault_path) { 
     if (has_destination()) {
         string link = hugo_vault_path / linkify(_vault_path);
+        if (_chapter != "") {
+            link += "#" + _chapter;
+        }
         return "[" + _name + "](/" + link + ")"; 
     }
     else {
@@ -80,7 +99,7 @@ string Link::new_tab_link(path hugo_vault_path){
 }
 
 bool Link::has_destination(){
-    return !_no_destination;
+    return ( _vault_path != "" || _chapter != "");
 }
 
 path Link::getVaultPath(){

@@ -86,10 +86,11 @@ string Converter::_obsidian_to_hugo(Note* note) {
     string content = read_file(obsidian_path);
 
     cout << "Scraping content from: " << obsidian_path.string() << endl;
-    content = _hugoify_links(note, content);
-    content = _format_latex(content);
 
     vector<string> tags = _extract_tags(&content);
+
+    content = _hugoify_links(note, content);
+    content = _format_latex(content);
 
     content = _add_header(obsidian_path, tags, content);
     return content;
@@ -99,10 +100,10 @@ vector<string> Converter::_extract_tags(string* content){
     vector<string> tags = {};
 
     std::smatch m;
-    std::regex r("(---)?(\\n|\\s)#(\\w+)\n?");
+    std::regex r("(---)?(\\n|\\s)#([^\\s#]+)");
     while (std::regex_search(*content, m, r)) {
-        *content = content->substr(0, m.position()) + content->substr(m.position() + m.length());
-        tags.push_back(m[3]);
+        tags.push_back(m[3].str());
+        *content = content->substr(0, m.position()) +  content->substr(m.position() + m.length());
     }
 
     return tags;
@@ -113,8 +114,10 @@ string Converter::_add_header(path file_path, vector<string> tags, string conten
 
     if (tags.size() > 0){
         header += "\ntags: [";
-        for (auto tag : tags) header += tag + ", ";
-        header = header.substr(0, header.length() - 2) + "]";
+        for (string tag : tags) {
+            header += tag + ", ";
+        }
+        header = header.substr(0, header.length()-2) + "]";
     }
     else {
         header += "\ntags: []";
@@ -173,6 +176,9 @@ string Converter::_hugoify_links(Note* note, string content) {
         if (bnote != nullptr) {
             note->addBacklink(bnote);
             text_link = link.hugo_markdown_link(_content_dir);
+        }
+        else if (link.has_destination()) {
+            text_link = link.hugo_local_markdown_link(_content_dir, note);
         }
         else if (vault_path != "") {
             path hugo_path = _hugo_root / "static" / _content_dir / linkify(vault_path);
