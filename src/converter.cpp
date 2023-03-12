@@ -89,12 +89,38 @@ string Converter::_obsidian_to_hugo(Note* note) {
     content = _hugoify_links(note, content);
     content = _format_latex(content);
 
-    content = _add_header(obsidian_path, content);
+    vector<string> tags = _extract_tags(&content);
+
+    content = _add_header(obsidian_path, tags, content);
     return content;
 }
 
-string Converter::_add_header(path file_path, string contents){
-    string header = "---\ntype: note\ntitle: " + file_path.stem().string() + "\n---\n\n";
+vector<string> Converter::_extract_tags(string* content){
+    vector<string> tags = {};
+
+    std::smatch m;
+    std::regex r("(---)?(\\n|\\s)#(\\w+)");
+    while (std::regex_search(*content, m, r)) {
+        *content = content->substr(0, m.position()) + content->substr(m.position() + m.length());
+        tags.push_back(m[3]);
+    }
+
+    return tags;
+}
+
+string Converter::_add_header(path file_path, vector<string> tags, string contents){
+    string header = "---\ntype: note\ntitle: " + file_path.stem().string(); 
+
+    if (tags.size() > 0){
+        header += "\ntags: [";
+        for (auto tag : tags) header += tag + ", ";
+        header = header.substr(0, header.length() - 2) + "]";
+    }
+    else {
+        header += "\ntags: []";
+    }
+
+    header += "\n---\n\n";
     return header + contents;
 } 
 
