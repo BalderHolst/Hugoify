@@ -1,7 +1,7 @@
 # TODO
-- [ ] Tags
 - [ ] Dataview
 - [ ] Fix exclude HJEM.md
+- [ ] Chapter links
 
 # Script
 - [ ] Change martixes to work with hugo
