@@ -105,7 +105,7 @@ vector<string> Converter::_extract_tags(string* content){
     int hash_location;
 
     std::smatch m;
-    std::regex r("(---)?(\\n|\\s)#([^\\s#]+)");
+    std::regex r("(---\\n*)?(\\n|\\s)#([^\\s#]+)");
     while (std::regex_search(*content, m, r)) {
         for (; content_ptr < m.position(); content_ptr++) {
             if ((*content)[content_ptr] == '`') in_codeblock = !in_codeblock;
