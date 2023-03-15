@@ -91,12 +91,40 @@ string Converter::_obsidian_to_hugo(Note* note) {
 
     _hugoify_links(note, content);
     _format_latex(content);
+    _format_cboxes(content);
 
     _add_header(obsidian_path, tags, content);
     return content;
 }
 
 
+void Converter::_format_cboxes(string& content){
+    
+    const string cbox_end = "{{< /cbox >}}";
+
+    std::smatch m;
+    std::regex r(">\\[!([^\\s\\n]+)\\](-)? ?(.*)\\n((>.*\\n)*)");
+    while (std::regex_search(content, m, r)) {
+        string type = m[1].str();
+        string title = m[3].str();
+        bool foldable = m[2] == "-";
+
+        string cbox_begin = "{{< cbox type=\"" + type + "\" " +
+            "title=\"" + title + "\" " +
+            "foldable=\"" + (foldable ? "true" : "false") + "\" " +
+            ">}}\n";
+        
+        string cbox_content = m[4].str();
+
+        for (int i = 0; i != -1; i = cbox_content.find('>')) {
+            cbox_content = cbox_content.substr(0, i) + cbox_content.substr(i + 1);
+        }
+
+        string cbox = cbox_begin + cbox_content + cbox_end;
+
+        content = content.substr(0, m.position()) + cbox + content.substr(m.position() + m.length());
+    }
+}
 
 vector<string> Converter::_extract_tags(string& content){
 

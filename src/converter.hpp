@@ -27,6 +27,7 @@ class Converter {
 	void _hugoify_links(Note* note, string& content);
     void _addBacklinks(Note* note);
     void _format_latex(string& content);
+    void _format_cboxes(string& content);
     vector<string> _extract_tags(string& content);
     void _add_header(path file_path, vector<string> tags, string& contents);
 
