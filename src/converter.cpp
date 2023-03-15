@@ -177,12 +177,23 @@ void Converter::_format_latex(string& content){
     const string search_string = "$$";
     for (int pos = content.find(search_string); pos != -1; pos = content.find(search_string, pos + 2)) {
         int begin = pos;
-        pos = content.find(search_string, pos + 2);
+        pos = content.find(search_string, begin + 2);
         int end = pos;
 
         for (int latex_pos = content.find("\\\\", begin); latex_pos != -1 && latex_pos < end; latex_pos = content.find("\\\\", latex_pos + 3)) {
             content = content.substr(0, latex_pos + 1) + "newline" + content.substr(latex_pos + 2);
         }
+
+        end = content.find(search_string, begin + 2);
+        for (int latex_pos = content.find("\n\n", begin); latex_pos != -1 && latex_pos < end; latex_pos = content.find("\n\n", latex_pos + 3)) {
+            content = content.substr(0, latex_pos) + content.substr(latex_pos + 1);
+        }
+
+        end = content.find(search_string, begin + 2) + 2;
+
+        content = content.substr(0, end) + "\n\n" + content.substr(end);
+
+        pos = end + 2;
     }
 
     // Add needed newlines for inline math
@@ -191,6 +202,7 @@ void Converter::_format_latex(string& content){
         content = content.substr(0, latex_pos) + "\n" + content.substr(latex_pos);
         latex_pos++;
     }
+    
 }
 
 Note* Converter::_getNote(path vault_path){
