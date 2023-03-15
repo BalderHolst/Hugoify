@@ -87,16 +87,18 @@ string Converter::_obsidian_to_hugo(Note* note) {
 
     cout << "Scraping content from: " << obsidian_path.string() << endl;
 
-    vector<string> tags = _extract_tags(&content);
+    vector<string> tags = _extract_tags(content);
 
-    content = _hugoify_links(note, content);
-    content = _format_latex(content);
+    _hugoify_links(note, content);
+    _format_latex(content);
 
-    content = _add_header(obsidian_path, tags, content);
+    _add_header(obsidian_path, tags, content);
     return content;
 }
 
-vector<string> Converter::_extract_tags(string* content){
+
+
+vector<string> Converter::_extract_tags(string& content){
 
     vector<string> tags = {};
     vector<int> hash_locations = {};
@@ -106,27 +108,27 @@ vector<string> Converter::_extract_tags(string* content){
 
     std::smatch m;
     std::regex r("(---\\n*)?(\\n|\\s)#([^\\s#]+)");
-    while (std::regex_search(*content, m, r)) {
+    while (std::regex_search(content, m, r)) {
         for (; content_ptr < m.position(); content_ptr++) {
-            if ((*content)[content_ptr] == '`') in_codeblock = !in_codeblock;
+            if ((content)[content_ptr] == '`') in_codeblock = !in_codeblock;
         }
         if (in_codeblock) {
             hash_location = content_ptr + m[1].length() + 1;
-            (*content)[hash_location] = ' '; // add replace tag to not match here anymore
+            (content)[hash_location] = ' '; // add replace tag to not match here anymore
             hash_locations.push_back(hash_location);
         }
         else{ 
             tags.push_back(m[3].str());
-            *content = content->substr(0, content_ptr) + content->substr(content_ptr + m.length());
+            content = content.substr(0, content_ptr) + content.substr(content_ptr + m.length());
         }
     }
     for (int l : hash_locations){ // Re-insert hashtags
-        (*content)[l] = '#';
+        (content)[l] = '#';
     }
     return tags;
 }
 
-string Converter::_add_header(path file_path, vector<string> tags, string contents){
+void Converter::_add_header(path file_path, vector<string> tags, string& contents){
     string header = "---\ntype: note\ntitle: " + file_path.stem().string(); 
 
     if (tags.size() > 0){
@@ -139,12 +141,11 @@ string Converter::_add_header(path file_path, vector<string> tags, string conten
     else {
         header += "\ntags: []";
     }
-
     header += "\n---\n\n";
-    return header + contents;
+    contents = header + contents;
 } 
 
-string Converter::_format_latex(string content){
+void Converter::_format_latex(string& content){
     const string search_string = "$$";
     for (int pos = content.find(search_string); pos != -1; pos = content.find(search_string, pos + 2)) {
         int begin = pos;
@@ -162,8 +163,6 @@ string Converter::_format_latex(string content){
         content = content.substr(0, latex_pos) + "\n" + content.substr(latex_pos);
         latex_pos++;
     }
-
-    return content;
 }
 
 Note* Converter::_getNote(path vault_path){
@@ -178,7 +177,7 @@ Note* Converter::_getNote(path vault_path){
     return nullptr;
 }
 
-string Converter::_hugoify_links(Note* note, string content) {
+void Converter::_hugoify_links(Note* note, string& content) {
     std::smatch m;
     std::regex r("(!?\\[\\[[^\\[\\]]+\\]\\])");
     while (std::regex_search(content, m, r)) {
@@ -214,7 +213,6 @@ string Converter::_hugoify_links(Note* note, string content) {
                             content.substr(m.position() + m.length());
 
     }
-    return content;
 }
 
 

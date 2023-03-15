@@ -19,17 +19,16 @@ class Converter {
 
 	void _convert_dir(path dir, path out_dir, path hugo_path);
     std::vector<path> _get_excluded(); 
-	string _hugoify_links(Note* note, string content);
-	string _obsidian_to_hugo(Note* note);
-    string _add_header(path file_path, vector<string> tags, string contents);
     bool _is_excluded(path file_path);
     Finding _find_file(path dir, string name);
     vector<Note> _findNotes(path dir);
     Note* _getNote(path vault_path);
+    string _obsidian_to_hugo(Note* note);
+	void _hugoify_links(Note* note, string& content);
     void _addBacklinks(Note* note);
-    string _double_newlines(string content);
-    string _format_latex(string content);
-    vector<string> _extract_tags(string* content);
+    void _format_latex(string& content);
+    vector<string> _extract_tags(string& content);
+    void _add_header(path file_path, vector<string> tags, string& contents);
 
 public:
     Converter(path vault, path hugo_root, path content_dir = "notes");
