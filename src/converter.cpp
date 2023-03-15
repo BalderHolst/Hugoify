@@ -90,8 +90,8 @@ string Converter::_obsidian_to_hugo(Note* note) {
     vector<string> tags = _extract_tags(content);
 
     _hugoify_links(note, content);
-    _format_latex(content);
     _format_cboxes(content);
+    _format_latex(content);
 
     _add_header(obsidian_path, tags, content);
     return content;
@@ -187,6 +187,11 @@ void Converter::_format_latex(string& content){
         end = content.find(search_string, begin + 2);
         for (int latex_pos = content.find("\n\n", begin); latex_pos != -1 && latex_pos < end; latex_pos = content.find("\n\n", latex_pos + 3)) {
             content = content.substr(0, latex_pos) + content.substr(latex_pos + 1);
+        }
+
+        end = content.find(search_string, begin + 2);
+        for (int latex_pos = content.find("\n=", begin); latex_pos != -1 && latex_pos < end; latex_pos = content.find("\n=", latex_pos + 4)) {
+            content = content.substr(0, latex_pos) + "=" + content.substr(latex_pos + 2);
         }
 
         end = content.find(search_string, begin + 2) + 2;
