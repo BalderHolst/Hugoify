@@ -4,7 +4,9 @@
 
 #include "glob/single_include/glob/glob.hpp"
 
+#include <cctype>
 #include <filesystem>
+#include <ios>
 #include <iostream>
 #include <regex>
 #include <vector>
@@ -108,6 +110,11 @@ void Converter::_format_cboxes(string& content){
         string type = m[1].str();
         string title = m[3].str();
         bool foldable = m[2] == "-";
+
+        if (title == "") {
+            title = type;
+            title[0] = toupper(title[0]);
+        }
 
         string cbox_begin = "{{< cbox type=\"" + type + "\" " +
             "title=\"" + title + "\" " +
