@@ -1,7 +1,7 @@
 # TODO
 - [ ] Dataview
 - [ ] Fix exclude HJEM.md
-- [ ] Fix _extract_tags in codeblocks
+- [ ] cbox type to lower case
 
 # Script
 - [ ] Change martixes to work with hugo
