@@ -65,7 +65,7 @@ void Converter::_addBacklinks(Note* note){
         for (Note* backlink : backlinks) {
             if (_is_excluded(_vault / backlink->getVaultPath())) continue;
             cout << "\t" << backlink->getVaultPath() << endl;
-            string yaml_backlink = linkify(backlink->getVaultPath().string());
+            string yaml_backlink = linkify(_content_dir / backlink->getVaultPath().string());
             yaml_backlinks += "/" + yaml_backlink + ", ";
         }
         yaml_backlinks = yaml_backlinks.substr(0, yaml_backlinks.length()-2) + "]";
