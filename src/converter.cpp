@@ -116,6 +116,8 @@ void Converter::_format_cboxes(string& content){
             title[0] = toupper(title[0]);
         }
 
+        for (int i = 0; i < type.length(); i++) type[i] = tolower(type[i]);
+
         string cbox_begin = "{{< cbox type=\"" + type + "\" " +
             "title=\"" + title + "\" " +
             "foldable=\"" + (foldable ? "true" : "false") + "\" " +
