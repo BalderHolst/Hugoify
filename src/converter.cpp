@@ -22,7 +22,8 @@ string read_file(std::string path);
 void write_file(path file_path, string contents);
 string linkify(path link_path);
 
-Converter::Converter(path vault, path hugo_root, path content_dir) : _vault(vault), _hugo_root(hugo_root), _content_dir(content_dir) {
+Converter::Converter(path vault, path hugo_root, path content_dir) : _vault(vault), _hugo_root(hugo_root) {
+    _content_dir = content_dir / "vault";
     _excluded_paths = _get_excluded();
     _notes = _findNotes(vault);
 }
