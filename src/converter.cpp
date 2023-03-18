@@ -43,6 +43,15 @@ void Converter::convert_vault() {
     for (int i = 0; i < _notes.size(); i++){
         _addBacklinks(&_notes[i]);
     }
+
+    _add_index_file();
+}
+
+void Converter::_add_index_file(){
+    string index = "---\n";
+    index += "type: \"note\"\n";
+    index += "---\n";
+    write_file(_hugo_root / "content" / _content_dir / "_index.md", index);
 }
 
 void Converter::_addBacklinks(Note* note){

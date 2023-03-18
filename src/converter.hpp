@@ -30,6 +30,7 @@ class Converter {
     void _format_cboxes(string& content);
     vector<string> _extract_tags(string& content);
     void _add_header(path file_path, vector<string> tags, string& contents);
+    void _add_index_file();
 
 public:
     Converter(path vault, path hugo_root, path content_dir = "notes");
