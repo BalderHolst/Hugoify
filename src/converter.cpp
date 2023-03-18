@@ -178,7 +178,7 @@ void Converter::_add_header(path file_path, vector<string> tags, string& content
     string header = "---\ntype: note\ntitle: " + file_path.stem().string(); 
 
     if (tags.size() > 0){
-        header += "\ntags: [";
+        header += "\nnote-tags: [";
         for (string tag : tags) {
             header += tag + ", ";
         }
