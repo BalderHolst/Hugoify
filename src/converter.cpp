@@ -102,7 +102,7 @@ string Converter::_obsidian_to_hugo(Note* note) {
 
 void Converter::_format_cboxes(string& content){
     
-    const string cbox_end = "{{< /cbox >}}";
+    const string cbox_end = "{{< /cbox >}}\n\n";
 
     std::smatch m;
     std::regex r(">\\[!([^\\s\\n]+)\\](-)? ?(.*)\\n((>.*\\n)*)");
