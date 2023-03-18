@@ -1,8 +1,9 @@
 # TODO
+- [ ] Fix bøger exclude!
 - [ ] Dataview
 - [ ] Fix exclude HJEM.md
+- [ ] Fix page=?? links
+- [ ] Fix Integralregning Backlinks
 
 # Script
-- [ ] Change martixes to work with hugo
-- [ ] Convert custom latex commands
 - [ ] export-ignore comments
