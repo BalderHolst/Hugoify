@@ -3,9 +3,9 @@
 // TODO 
 string linkify(path link_path);
 
-bool Finding::was_found() { return _found; }
+bool Finding::wasFound() { return _found; }
 
-string Finding::get_finding() { return _finding; }
+string Finding::getFinding() { return _finding; }
 
 Finding::Finding(path finding) : _finding(finding) {
     if (finding == "") _found = false;

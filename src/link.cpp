@@ -16,7 +16,7 @@ Link::Link(string name, path vault_path, string chapter, bool shown) :
     if (name == "") _name = vault_path;
 }
 
-Link Link::link_from_raw(path vault, string full_input, Converter* converter){
+Link Link::linkFromRaw(path vault, string full_input, Converter* converter){
 
     bool shown = false;
 
@@ -38,22 +38,22 @@ Link Link::link_from_raw(path vault, string full_input, Converter* converter){
     bool hash = hash_index != -1;
 
     if (!bar and !hash){
-        link = converter->find_file(full_input);
+        link = converter->findFile(full_input);
         name = full_input;
         chapter = "";
     }
     else if (bar and !hash) {
-        link = converter->find_file(full_input.substr(0, bar_index));
+        link = converter->findFile(full_input.substr(0, bar_index));
         name = full_input.substr(bar_index + 1);
         chapter = "";
     }
     else if (!bar and hash) { // TODO handle local links
-        link = converter->find_file(full_input.substr(0, hash_index));
+        link = converter->findFile(full_input.substr(0, hash_index));
         chapter = full_input.substr(hash_index + 1);
         name = full_input;
     }
     else if (bar and hash) {
-        link = converter->find_file(full_input.substr(0, hash_index));
+        link = converter->findFile(full_input.substr(0, hash_index));
         chapter = full_input.substr(hash_index + 1, bar_index);
         name = full_input.substr(bar_index + 1);
     }
@@ -76,8 +76,8 @@ void Link::doNotShow(){
     _shown = false;
 }
 
-string Link::markdown_link(path hugo_vault_path) { 
-    if (has_destination()) {
+string Link::markdownLink(path hugo_vault_path) { 
+    if (hasDestination()) {
         string link = hugo_vault_path / linkify(_vault_path);
         if (_chapter != "") {
             link += "#" + _chapter;
@@ -96,8 +96,8 @@ string Link::markdown_link(path hugo_vault_path) {
     }
 }
 
-string Link::new_tab_link(path hugo_vault_path){
-    if (has_destination()) {
+string Link::newTabLink(path hugo_vault_path){
+    if (hasDestination()) {
         string link = hugo_vault_path / linkify(_vault_path);
         return "{{< note_attachment name=\"" + _name + "\" link=\"/" + link  + "#" + _chapter + "\" >}}";
     }
@@ -106,7 +106,7 @@ string Link::new_tab_link(path hugo_vault_path){
     }
 }
 
-bool Link::has_destination(){
+bool Link::hasDestination(){
     return ( _vault_path != "" || _chapter != "");
 }
 

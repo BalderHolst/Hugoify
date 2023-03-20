@@ -74,6 +74,6 @@ int main(int argc, char *argv[]) {
 	path hugo_path = "/home/balder/projects/website";
 
 
-    Converter(vault_path, hugo_path).convert_vault();
+    Converter(vault_path, hugo_path).convertVault();
 	return 0;
 }

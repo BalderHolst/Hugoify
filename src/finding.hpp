@@ -14,8 +14,8 @@ class Finding {
 
     public:
         Finding(path finding = "");
-        bool was_found();
-        string get_finding();
+        bool wasFound();
+        string getFinding();
 };
 
 #endif // !FINDING_INCLUDES

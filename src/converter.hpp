@@ -17,25 +17,25 @@ class Converter {
     std::vector<path> _excluded_paths;
     std::vector<Note> _notes;
 
-	void _convert_dir(path dir, path out_dir, path hugo_path);
-    std::vector<path> _get_excluded(); 
-    bool _is_excluded(path file_path);
-    Finding _find_file(path dir, string name);
+	void _convertDir(path dir, path out_dir, path hugo_path);
+    std::vector<path> _getExcluded(); 
+    bool _isExcluded(path file_path);
+    Finding _findFile(path dir, string name);
     vector<Note> _findNotes(path dir);
     Note* _getNote(path vault_path);
-    string _obsidian_to_hugo(Note* note);
-	void _hugoify_links(Note* note, string& content);
+    string _obsidianToHugo(Note* note);
+	void _hugoifyLinks(Note* note, string& content);
     void _addBacklinks(Note* note);
-    void _format_latex(string& content);
-    void _format_cboxes(string& content);
-    vector<string> _extract_tags(string& content);
-    void _add_header(path file_path, vector<string> tags, string& contents);
-    void _add_index_file();
+    void _formatLatex(string& content);
+    void _formatCboxes(string& content);
+    vector<string> _extractTags(string& content);
+    void _addHeader(path file_path, vector<string> tags, string& contents);
+    void _addIndexFile();
 
 public:
     Converter(path vault, path hugo_root, path content_dir = "notes");
-    void convert_vault();
-    path find_file(string name);
+    void convertVault();
+    path findFile(string name);
 };
 
 #endif

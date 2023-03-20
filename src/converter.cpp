@@ -24,18 +24,18 @@ string linkify(path link_path);
 
 Converter::Converter(path vault, path hugo_root, path content_dir) : _vault(vault), _hugo_root(hugo_root) {
     _content_dir = content_dir / "vault";
-    _excluded_paths = _get_excluded();
+    _excluded_paths = _getExcluded();
     _notes = _findNotes(vault);
 }
 
-void Converter::convert_vault() {
+void Converter::convertVault() {
     fs::remove_all(_hugo_root / "content" / _content_dir);
     fs::remove_all(_hugo_root / "static" / _content_dir);
 
     for (int i = 0; i < _notes.size(); i++){
         Note* note = &_notes[i];
         path obsidian_path = _vault / note->getVaultPath();
-        string hugo_contents = _obsidian_to_hugo(note);
+        string hugo_contents = _obsidianToHugo(note);
         write_file(_hugo_root / "content" / _content_dir / note->getHugoVaultPath(), hugo_contents);
     }
 
@@ -45,10 +45,10 @@ void Converter::convert_vault() {
         _addBacklinks(&_notes[i]);
     }
 
-    _add_index_file();
+    _addIndexFile();
 }
 
-void Converter::_add_index_file(){
+void Converter::_addIndexFile(){
     string index = "---\n";
     index += "type: \"note\"\n";
     index += "---\n";
@@ -63,7 +63,7 @@ void Converter::_addBacklinks(Note* note){
     auto backlinks = note->getBacklinks();
     if (backlinks.size() > 0) {
         for (Note* backlink : backlinks) {
-            if (_is_excluded(_vault / backlink->getVaultPath())) continue;
+            if (_isExcluded(_vault / backlink->getVaultPath())) continue;
             cout << "\t" << backlink->getVaultPath() << endl;
             string yaml_backlink = linkify(_content_dir / backlink->getVaultPath().string());
             yaml_backlinks += "/" + yaml_backlink + ", ";
@@ -86,31 +86,31 @@ void Converter::_addBacklinks(Note* note){
     write_file(hugo_file_path, content);
 }
 
-bool Converter::_is_excluded(path file_path){
+bool Converter::_isExcluded(path file_path){
     for (path excluded_path : _excluded_paths) {
         if (file_path.lexically_relative(excluded_path) == file_path.filename()) return true;
     }
     return false;
 }
 
-string Converter::_obsidian_to_hugo(Note* note) {
+string Converter::_obsidianToHugo(Note* note) {
     path obsidian_path = _vault / note->getVaultPath();
     string content = read_file(obsidian_path);
 
     cout << "Scraping content from: " << obsidian_path.string() << endl;
 
-    vector<string> tags = _extract_tags(content);
+    vector<string> tags = _extractTags(content);
 
-    _hugoify_links(note, content);
-    _format_cboxes(content);
-    _format_latex(content);
+    _hugoifyLinks(note, content);
+    _formatCboxes(content);
+    _formatLatex(content);
 
-    _add_header(obsidian_path, tags, content);
+    _addHeader(obsidian_path, tags, content);
     return content;
 }
 
 
-void Converter::_format_cboxes(string& content){
+void Converter::_formatCboxes(string& content){
     
     const string cbox_end = "{{< /cbox >}}\n\n";
 
@@ -145,7 +145,7 @@ void Converter::_format_cboxes(string& content){
     }
 }
 
-vector<string> Converter::_extract_tags(string& content){
+vector<string> Converter::_extractTags(string& content){
 
     vector<string> tags = {};
     vector<int> hash_locations = {};
@@ -175,7 +175,7 @@ vector<string> Converter::_extract_tags(string& content){
     return tags;
 }
 
-void Converter::_add_header(path file_path, vector<string> tags, string& contents){
+void Converter::_addHeader(path file_path, vector<string> tags, string& contents){
     string header = "---\ntype: note\ntitle: " + file_path.stem().string(); 
 
     if (tags.size() > 0){
@@ -192,7 +192,7 @@ void Converter::_add_header(path file_path, vector<string> tags, string& content
     contents = header + contents;
 } 
 
-void Converter::_format_latex(string& content){
+void Converter::_formatLatex(string& content){
     const string search_string = "$$";
     for (int pos = content.find(search_string); pos != -1; pos = content.find(search_string, pos + 2)) {
         int begin = pos;
@@ -224,12 +224,12 @@ Note* Converter::_getNote(path vault_path){
     return nullptr;
 }
 
-void Converter::_hugoify_links(Note* note, string& content) {
+void Converter::_hugoifyLinks(Note* note, string& content) {
     std::smatch m;
     std::regex r("(!?\\[\\[[^\\[\\]]+\\]\\])");
     while (std::regex_search(content, m, r)) {
         string ms = m[1].str();
-        Link link = Link::link_from_raw(_vault, ms, this);
+        Link link = Link::linkFromRaw(_vault, ms, this);
 
         path vault_path = link.getVaultPath();
         Note* linked_note = _getNote(vault_path);
@@ -239,15 +239,15 @@ void Converter::_hugoify_links(Note* note, string& content) {
         if (linked_note != nullptr) { // if the linked_note is a note
             note->addBacklink(linked_note);
             link.doNotShow();
-            text_link = link.markdown_link(_content_dir);
+            text_link = link.markdownLink(_content_dir);
         }
-        else if (link.has_destination()) { // if the file is an attachment
-            text_link = link.markdown_link(_content_dir);
+        else if (link.hasDestination()) { // if the file is an attachment
+            text_link = link.markdownLink(_content_dir);
 
             // Copy attachment to website
             path hugo_path = _hugo_root / "static" / _content_dir / linkify(vault_path);
             fs::create_directories(hugo_path.parent_path());
-            if (!fs::exists(hugo_path) && !_is_excluded(_vault / vault_path)) fs::copy_file(_vault / vault_path, hugo_path);
+            if (!fs::exists(hugo_path) && !_isExcluded(_vault / vault_path)) fs::copy_file(_vault / vault_path, hugo_path);
         }
         else {
             std::cout << "WARNING: Removing link: " << link.getName() << std::endl;
@@ -261,7 +261,7 @@ void Converter::_hugoify_links(Note* note, string& content) {
 }
 
 
-std::vector<path> Converter::_get_excluded() {
+std::vector<path> Converter::_getExcluded() {
 
     path exclude_path = _vault.string() + "/.export-ignore";
 
@@ -304,7 +304,7 @@ vector<Note> Converter::_findNotes(path dir){
 
     for (const auto &file : std::filesystem::directory_iterator(dir)) {
         path file_path = file.path();
-        if (_is_excluded(file_path)) continue;
+        if (_isExcluded(file_path)) continue;
         else if (file.is_directory()) {
             for (Note note : _findNotes(file_path)) notes.push_back(note);
         } else if (file_path.extension() == ".md") {
@@ -315,12 +315,12 @@ vector<Note> Converter::_findNotes(path dir){
     return notes;
 }
 
-Finding Converter::_find_file(path dir, string name) {
+Finding Converter::_findFile(path dir, string name) {
     name = linkify(name);
     for (const auto &file : std::filesystem::directory_iterator(dir)) {
         if (file.is_directory()) {
-            Finding finding = _find_file(file.path(), name);
-            if (finding.was_found())
+            Finding finding = _findFile(file.path(), name);
+            if (finding.wasFound())
                 return finding;
         } else {
             string filename = linkify(file.path().filename());
@@ -336,14 +336,14 @@ Finding Converter::_find_file(path dir, string name) {
 }
 
 
-path Converter::find_file(string name) {
+path Converter::findFile(string name) {
 
     name = ((path) name).filename().string(); // Isolate filename
 
-    Finding finding = _find_file(_vault, name);
+    Finding finding = _findFile(_vault, name);
 
-    if (finding.was_found()) {
-        return ((path) finding.get_finding()).lexically_relative(_vault);
+    if (finding.wasFound()) {
+        return ((path) finding.getFinding()).lexically_relative(_vault);
     } else {
         cout << "WARNING: could not find link \'" << name << "\'" << endl; 
 

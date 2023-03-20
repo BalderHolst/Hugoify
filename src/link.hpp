@@ -19,12 +19,12 @@ class Link {
 
     public:
         Link(string name, path link, string chapter = "", bool shown = false);
-        static Link link_from_raw(path vault, string full_input, Converter* converter);
-        path hugo_link(path hugo_path);
-        string markdown_link(path hugo_vault_path);
-        string new_tab_link(path hugo_vault_path);
+        static Link linkFromRaw(path vault, string full_input, Converter* converter);
+        path hugoLink(path hugo_path);
+        string markdownLink(path hugo_vault_path);
+        string newTabLink(path hugo_vault_path);
         void doNotShow();
-        bool has_destination();
+        bool hasDestination();
         path getVaultPath();
         string getName();
 };
