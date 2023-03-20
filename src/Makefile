@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named main
+# Target rules for targets named hugoify
 
 # Build rule for target.
-main: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main
-.PHONY : main
+hugoify: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 hugoify
+.PHONY : hugoify
 
 # fast build rule for target.
-main/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
-.PHONY : main/fast
+hugoify/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/build
+.PHONY : hugoify/fast
 
 converter.o: converter.cpp.o
 .PHONY : converter.o
 
 # target to build an object file
 converter.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/converter.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/converter.cpp.o
 .PHONY : converter.cpp.o
 
 converter.i: converter.cpp.i
@@ -142,7 +142,7 @@ converter.i: converter.cpp.i
 
 # target to preprocess a source file
 converter.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/converter.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/converter.cpp.i
 .PHONY : converter.cpp.i
 
 converter.s: converter.cpp.s
@@ -150,7 +150,7 @@ converter.s: converter.cpp.s
 
 # target to generate assembly for a file
 converter.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/converter.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/converter.cpp.s
 .PHONY : converter.cpp.s
 
 finding.o: finding.cpp.o
@@ -158,7 +158,7 @@ finding.o: finding.cpp.o
 
 # target to build an object file
 finding.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/finding.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/finding.cpp.o
 .PHONY : finding.cpp.o
 
 finding.i: finding.cpp.i
@@ -166,7 +166,7 @@ finding.i: finding.cpp.i
 
 # target to preprocess a source file
 finding.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/finding.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/finding.cpp.i
 .PHONY : finding.cpp.i
 
 finding.s: finding.cpp.s
@@ -174,7 +174,7 @@ finding.s: finding.cpp.s
 
 # target to generate assembly for a file
 finding.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/finding.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/finding.cpp.s
 .PHONY : finding.cpp.s
 
 link.o: link.cpp.o
@@ -182,7 +182,7 @@ link.o: link.cpp.o
 
 # target to build an object file
 link.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/link.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/link.cpp.o
 .PHONY : link.cpp.o
 
 link.i: link.cpp.i
@@ -190,7 +190,7 @@ link.i: link.cpp.i
 
 # target to preprocess a source file
 link.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/link.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/link.cpp.i
 .PHONY : link.cpp.i
 
 link.s: link.cpp.s
@@ -198,7 +198,7 @@ link.s: link.cpp.s
 
 # target to generate assembly for a file
 link.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/link.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/link.cpp.s
 .PHONY : link.cpp.s
 
 main.o: main.cpp.o
@@ -206,7 +206,7 @@ main.o: main.cpp.o
 
 # target to build an object file
 main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -214,7 +214,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -222,7 +222,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/main.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 note.o: note.cpp.o
@@ -230,7 +230,7 @@ note.o: note.cpp.o
 
 # target to build an object file
 note.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/note.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/note.cpp.o
 .PHONY : note.cpp.o
 
 note.i: note.cpp.i
@@ -238,7 +238,7 @@ note.i: note.cpp.i
 
 # target to preprocess a source file
 note.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/note.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/note.cpp.i
 .PHONY : note.cpp.i
 
 note.s: note.cpp.s
@@ -246,7 +246,7 @@ note.s: note.cpp.s
 
 # target to generate assembly for a file
 note.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/note.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/hugoify.dir/build.make CMakeFiles/hugoify.dir/note.cpp.s
 .PHONY : note.cpp.s
 
 # Help Target
@@ -257,7 +257,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... main"
+	@echo "... hugoify"
 	@echo "... converter.o"
 	@echo "... converter.i"
 	@echo "... converter.s"
