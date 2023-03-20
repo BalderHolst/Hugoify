@@ -23,6 +23,7 @@ class Link {
         path hugo_link(path hugo_path);
         string markdown_link(path hugo_vault_path);
         string new_tab_link(path hugo_vault_path);
+        void doNotShow();
         bool has_destination();
         path getVaultPath();
         string getName();

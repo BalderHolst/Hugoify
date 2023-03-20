@@ -238,6 +238,7 @@ void Converter::_hugoify_links(Note* note, string& content) {
 
         if (linked_note != nullptr) { // if the linked_note is a note
             note->addBacklink(linked_note);
+            link.doNotShow();
             text_link = link.markdown_link(_content_dir);
         }
         else if (link.has_destination()) { // if the file is an attachment

@@ -72,16 +72,24 @@ string Link::_chapterId(){
     return c;
 }
 
+void Link::doNotShow(){
+    _shown = false;
+}
+
 string Link::markdown_link(path hugo_vault_path) { 
     if (has_destination()) {
         string link = hugo_vault_path / linkify(_vault_path);
         if (_chapter != "") {
             link += "#" + _chapter;
         }
+
+        string markdown_link = "[" + _name + "](/" + link + ")";
+
         if (_shown){
-            link = "\n!" + link;
+            markdown_link = "\n!" + markdown_link;
         }
-        return "[" + _name + "](/" + link + ")"; 
+
+        return markdown_link; 
     }
     else {
         return _name;
