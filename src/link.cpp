@@ -7,13 +7,13 @@
 // TODO
 string linkify(path link_path);
 
-Link::Link(string name, path link, string chapter, bool shown) :
+Link::Link(string name, path vault_path, string chapter, bool shown) :
     _name(name),
-    _vault_path(link),
+    _vault_path(vault_path),
     _chapter(chapter),
     _shown(shown)
 {
-    if (name == "") _name = link;
+    if (name == "") _name = vault_path;
 }
 
 Link Link::link_from_raw(path vault, string full_input, Converter* converter){
@@ -72,15 +72,14 @@ string Link::_chapterId(){
     return c;
 }
 
-string Link::hugo_local_markdown_link(string hugo_vault_path, Note* this_note){
-    return "[" + _chapter + "](/" + hugo_vault_path + "/" + linkify(this_note->getVaultPath()) + "#" + _chapterId() + ")"; 
-}
-
-string Link::hugo_markdown_link(path hugo_vault_path) { 
+string Link::markdown_link(path hugo_vault_path) { 
     if (has_destination()) {
         string link = hugo_vault_path / linkify(_vault_path);
         if (_chapter != "") {
             link += "#" + _chapter;
+        }
+        if (_shown){
+            link = "\n!" + link;
         }
         return "[" + _name + "](/" + link + ")"; 
     }

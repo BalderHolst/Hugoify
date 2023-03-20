@@ -232,24 +232,21 @@ void Converter::_hugoify_links(Note* note, string& content) {
         Link link = Link::link_from_raw(_vault, ms, this);
 
         path vault_path = link.getVaultPath();
-        Note* bnote = _getNote(vault_path);
+        Note* linked_note = _getNote(vault_path);
 
         string text_link;
 
-        if (bnote != nullptr) {
-            note->addBacklink(bnote);
-            text_link = link.hugo_markdown_link(_content_dir);
+        if (linked_note != nullptr) { // if the linked_note is a note
+            note->addBacklink(linked_note);
+            text_link = link.markdown_link(_content_dir);
         }
-        else if (link.has_destination()) {
-            text_link = link.hugo_local_markdown_link(_content_dir, note);
-        }
-        else if (vault_path != "") {
+        else if (link.has_destination()) { // if the file is an attachment
+            text_link = link.markdown_link(_content_dir);
+
+            // Copy attachment to website
             path hugo_path = _hugo_root / "static" / _content_dir / linkify(vault_path);
             fs::create_directories(hugo_path.parent_path());
-
             if (!fs::exists(hugo_path) && !_is_excluded(_vault / vault_path)) fs::copy_file(_vault / vault_path, hugo_path);
-
-            text_link = link.new_tab_link(_content_dir);
         }
         else {
             std::cout << "WARNING: Removing link: " << link.getName() << std::endl;
