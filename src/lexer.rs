@@ -15,7 +15,7 @@ pub enum LexerError {
 #[derive(Debug, Clone)]
 pub struct Link {
     dest: String,
-    show_how: Option<String>,
+    show_how: String,
     options: Option<String>,
     render: bool,
 }
@@ -123,19 +123,19 @@ impl Lexer {
             0 => panic!("Emply link."),
             1 => Token::Link(Link {
                 dest: fields[0].clone(),
-                show_how: None,
+                show_how: fields[0].clone(),
                 options: None,
                 render: shown,
             }),
             2 => Token::Link(Link {
                 dest: fields[0].clone(),
-                show_how: Some(fields[1].clone()),
+                show_how: fields[1].clone(),
                 options: None,
                 render: shown,
             }),
             3 => Token::Link(Link {
                 dest: fields[0].clone(),
-                show_how: Some(fields[2].clone()),
+                show_how: fields[2].clone(),
                 options: Some(fields[1].clone()),
                 render: shown,
             }),
