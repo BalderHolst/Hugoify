@@ -7,11 +7,7 @@ pub enum LexerError {
     Utf(std::string::FromUtf8Error),
 }
 
-// pub struct TextSpan {
-//     file: String,
-//     range: (usize, usize),
-// }
-
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Link {
     dest: String,
@@ -20,6 +16,7 @@ pub struct Link {
     render: bool,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Callout {
     kind: String,
@@ -36,6 +33,44 @@ pub enum Token {
     Link(Link),
     Callout(Callout),
     Quote(Vec<Token>),
+}
+
+impl Token {
+    pub fn tokens_to_string<I>(tokens: I) -> String
+    where
+        I: IntoIterator<Item = Token>,
+    {
+        tokens
+            .into_iter()
+            .map(|token| token.to_string())
+            .collect::<String>()
+    }
+}
+
+impl ToString for Token {
+    fn to_string(&self) -> String {
+        match self {
+            Token::Text(s) => s.clone(),
+            Token::Tag(s) => format!("#{s}"),
+            Token::Header(level, title) => format!(
+                "{} {}",
+                "#".repeat(level.clone()),
+                Self::tokens_to_string(title.clone()),
+            ),
+            Token::Link(link) => match link.render {
+                true => format!("![{}]({})", link.show_how, link.dest),
+                false => format!("[{}]({})", link.show_how, link.dest),
+            },
+            Token::Callout(callout) => format!(
+                "{{{{< callout type=\"{}\" title=\"{}\" foldable=\"{}\" >}}}}\n{}{{{{< /callout >}}}}",
+                callout.kind,
+                Self::tokens_to_string(callout.title.clone()),
+                if callout.foldable { "true" } else { "false" },
+                Token::tokens_to_string(callout.contents.clone()),
+            ),
+            Token::Quote(_) => todo!(),
+        }
+    }
 }
 
 pub struct Lexer {
@@ -220,8 +255,7 @@ impl Lexer {
         // Is the quote a callout?
         if (self.peak(pointer), self.peak(pointer + 1)) == (Some('['), Some('!')) {
             self.consume_callout()
-        }
-        else {
+        } else {
             Token::Quote(self.consume_quote())
         }
     }
@@ -243,7 +277,11 @@ impl Lexer {
             foldable = true;
         }
         self.consume_whitespace();
-        let title = self.consume_line();
+        let mut title = Token::tokens_to_string(self.consume_line());
+        if title.chars().last().unwrap() == '\n' {
+            title.pop();
+        }
+        let title = vec![Token::Text(title)];
 
         let contents = self.consume_quote();
 
