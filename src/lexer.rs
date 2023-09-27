@@ -1,5 +1,5 @@
 use queues::{IsQueue, Queue};
-use std::fs;
+use std::{fs, path::Path};
 
 #[derive(Debug)]
 pub enum LexerError {
@@ -54,7 +54,7 @@ impl ToString for Token {
             Token::Tag(s) => format!("#{s}"),
             Token::Header(level, title) => format!(
                 "{} {}",
-                "#".repeat(level.clone()),
+                "#".repeat(*level),
                 Self::tokens_to_string(title.clone()),
             ),
             Token::Link(link) => match link.render {
@@ -89,18 +89,15 @@ impl Lexer {
         }
     }
 
-    pub fn from_file(path: &str) -> Result<Self, LexerError> {
-        let bytes = fs::read(path).map_err(|e| LexerError::Io(e))?;
-        let text = String::from_utf8(bytes).map_err(|e| LexerError::Utf(e))?;
+    pub fn from_file(path: &Path) -> Result<Self, LexerError> {
+        let bytes = fs::read(path).map_err(LexerError::Io)?;
+        let text = String::from_utf8(bytes).map_err(LexerError::Utf)?;
         Ok(Self::new(text))
     }
 
     fn peak(&self, offset: isize) -> Option<char> {
         let index = (self.cursor as isize + offset) as usize;
-        match self.text.get(index) {
-            Some(c) => Some(c.clone()),
-            None => None,
-        }
+        self.text.get(index).copied()
     }
 
     // Consume a character
@@ -188,7 +185,7 @@ impl Lexer {
         // Wether the line ends the entire file.
         let mut found_eof = false;
 
-        while self.current() != Some('\n') {
+        while !matches!(self.current(), Some('\n') | None) {
             match (self.current(), self.peak(1), self.peak(2)) {
                 (Some('['), Some('['), _) | (Some('!'), Some('['), Some('[')) => {
                     tokens.push(Token::Text(s.clone()));
@@ -240,8 +237,6 @@ impl Lexer {
 
     // blocks of text beginning with '>'
     fn consume_block(&mut self) -> Token {
-        let mut is_callout = false;
-
         // Find the starting character to determine if block is a callout
         assert_eq!(self.peak(0), Some('>'));
         let mut pointer: isize = 1;
@@ -278,7 +273,7 @@ impl Lexer {
         }
         self.consume_whitespace();
         let mut title = Token::tokens_to_string(self.consume_line());
-        if title.chars().last().unwrap() == '\n' {
+        if title.ends_with('\n') {
             title.pop();
         }
         let title = vec![Token::Text(title)];
@@ -319,7 +314,7 @@ impl Iterator for Lexer {
             );
         }
 
-        match self.current()?.clone() {
+        match self.current()? {
             '#' => {
                 let next = self.peak(1);
                 if next == Some(' ') || next == Some('#') {
