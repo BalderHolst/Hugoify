@@ -57,7 +57,7 @@ impl Vault {
 
     fn add_dir(&mut self, path: PathBuf) -> io::Result<()> {
         match path.file_name().map(|n| n.to_str()) {
-            Some(Some(".git")) | Some(Some(".obsidian")) | Some(Some(".trash")) => return Ok(()),
+            Some(Some(".git")) | Some(Some(".obsidian")) | Some(Some(".trash")) | Some(Some("Excalidraw")) => return Ok(()),
             _ => {}
         }
 

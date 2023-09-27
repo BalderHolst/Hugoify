@@ -1,5 +1,6 @@
 use queues::{IsQueue, Queue};
 use std::{fs, path::Path};
+use yaml_rust::{self, ScanError, Yaml};
 
 #[derive(Debug)]
 pub enum LexerError {
@@ -33,6 +34,7 @@ pub enum Token {
     Link(Link),
     Callout(Callout),
     Quote(Vec<Token>),
+    Frontmatter(Yaml),
 }
 
 impl Token {
@@ -69,6 +71,11 @@ impl ToString for Token {
                 Token::tokens_to_string(callout.contents.clone()),
             ),
             Token::Quote(_) => todo!(),
+            Token::Frontmatter(yaml) => {
+                let mut out_str = String::new();
+                yaml_rust::YamlEmitter::new(&mut out_str).dump(yaml).unwrap();
+                format!("---\n{}\n---", out_str)
+            },
         }
     }
 }
@@ -77,6 +84,7 @@ pub struct Lexer {
     cursor: usize,
     text: Vec<char>,
     queue: Queue<Token>,
+    first_token: bool,
 }
 
 impl Lexer {
@@ -86,6 +94,7 @@ impl Lexer {
             cursor: 0,
             text: chars,
             queue: Queue::new(),
+            first_token: true,
         }
     }
 
@@ -300,6 +309,35 @@ impl Lexer {
         }
         contents
     }
+
+    fn consume_front_matter(&mut self) -> Result<Token, ScanError> {
+        assert_eq!(self.consume(), Some('-'));
+        assert_eq!(self.consume(), Some('-'));
+        assert_eq!(self.consume(), Some('-'));
+
+        let mut yaml_text = String::new();
+
+        while (self.peak(0), self.peak(1), self.peak(2)) != (Some('-'), Some('-'), Some('-'))
+            && !self.peak(2).is_none()
+        {
+            yaml_text.push(
+                self.consume()
+                    .expect("The check for Some is already done here."),
+            );
+        }
+
+        let frontmatter = yaml_rust::YamlLoader::load_from_str(yaml_text.as_str())?;
+        if frontmatter.is_empty() { return Ok(Token::Text("".to_string())) }
+
+        let frontmatter = frontmatter[0].clone();
+
+        // TODO: make good error message if frontmatter is not ended correctly
+        assert_eq!(self.consume(), Some('-'));
+        assert_eq!(self.consume(), Some('-'));
+        assert_eq!(self.consume(), Some('-'));
+
+        Ok(Token::Frontmatter(frontmatter))
+    }
 }
 
 impl Iterator for Lexer {
@@ -314,7 +352,7 @@ impl Iterator for Lexer {
             );
         }
 
-        match self.current()? {
+        let token = match self.current()? {
             '#' => {
                 let next = self.peak(1);
                 if next == Some(' ') || next == Some('#') {
@@ -324,6 +362,15 @@ impl Iterator for Lexer {
                 }
             }
             '>' => Some(self.consume_block()),
+            '-' if self.first_token && (self.peak(1), self.peak(2)) == (Some('-'), Some('-')) => {
+                match self.consume_front_matter() {
+                    Ok(t) => Some(t),
+                    Err(e) => {
+                        eprintln!("ERROR: Could not parse frontmatter: {}", e);
+                        Some(Token::Text("".to_string()))
+                    },
+                }
+            }
             c if c.is_whitespace() => Some(Token::Text(self.consume_whitespace())),
             _ => {
                 for token in self.consume_line() {
@@ -334,6 +381,10 @@ impl Iterator for Lexer {
                     Err(_) => None,
                 }
             }
+        };
+        if self.first_token {
+            self.first_token = false
         }
+        token
     }
 }
