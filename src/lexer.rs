@@ -74,12 +74,8 @@ impl ToString for Token {
                 if callout.foldable { "true" } else { "false" },
                 Token::tokens_to_string(callout.contents.clone()),
             ),
-            Token::Quote(_) => todo!(),
-            Token::Frontmatter(yaml) => {
-                let mut out_str = String::new();
-                yaml_rust::YamlEmitter::new(&mut out_str).dump(yaml).unwrap();
-                format!("---\n{}\n---", out_str)
-            },
+            Token::Quote(quote) => quote.iter().map(|token| "> ".to_string() + token.to_string().as_str()).collect(),
+            Token::Frontmatter(_) => panic!("Frontmatter should never be part of a note body."),
         }
     }
 }
@@ -340,7 +336,9 @@ impl Lexer {
         }
 
         let frontmatter = yaml_rust::YamlLoader::load_from_str(yaml_text.as_str())?;
-        if frontmatter.is_empty() { return Ok(Token::Text("".to_string())) }
+        if frontmatter.is_empty() {
+            return Ok(Token::Text("".to_string()));
+        }
 
         let frontmatter = frontmatter[0].clone();
 
@@ -381,7 +379,7 @@ impl Iterator for Lexer {
                     Err(e) => {
                         eprintln!("ERROR: Could not parse frontmatter: {}", e);
                         Some(Token::Text("".to_string()))
-                    },
+                    }
                 }
             }
             c if c.is_whitespace() => Some(Token::Text(self.consume_whitespace())),

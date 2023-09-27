@@ -1,9 +1,11 @@
 use std::{
     collections::{HashMap, HashSet},
-    ffi::OsStr,
-    fs, io,
+    fs,
+    io::{self, Write},
     path::PathBuf,
 };
+
+use yaml_rust::Yaml;
 
 use crate::lexer::{Lexer, Token};
 
@@ -13,45 +15,95 @@ fn normalize_name(name: String) -> String {
 
 #[derive(Debug, Clone)]
 pub struct Note {
+    path: PathBuf, // Path within vault
     name: String,
     tokens: Vec<Token>,
+    frontmatter: Yaml,
     tags: Vec<String>,
     backlinks: Vec<String>,
     links: Vec<String>,
+}
+
+impl ToString for Note {
+    fn to_string(&self) -> String {
+        // This could probably be done better...
+        let frontmatter = match self.frontmatter.clone() {
+            Yaml::Hash(mut hash) => {
+                // Tags
+                hash.insert(
+                    Yaml::String("tags".to_string()),
+                    Yaml::Array(self.tags.iter().map(|t| Yaml::String(t.clone())).collect()),
+                );
+
+                // Backlinks
+                hash.insert(
+                    Yaml::String("backlinks".to_string()),
+                    Yaml::Array(
+                        self.backlinks
+                            .iter()
+                            .map(|t| Yaml::String(t.clone()))
+                            .collect(),
+                    ),
+                );
+
+                // Links
+                hash.insert(
+                    Yaml::String("links".to_string()),
+                    Yaml::Array(self.links.iter().map(|t| Yaml::String(t.clone())).collect()),
+                );
+
+                Yaml::Hash(hash)
+            }
+            _ => panic!("Frontmatter should always be hash."),
+        };
+
+        let frontmatter_text = {
+            let mut out_str = String::new();
+            yaml_rust::YamlEmitter::new(&mut out_str)
+                .dump(&frontmatter)
+                .unwrap();
+            format!("---\n{}\n---", out_str)
+        };
+
+        let body: String = self.tokens.iter().map(|t| t.to_string()).collect();
+
+        frontmatter_text + body.as_str()
+    }
 }
 
 #[derive(Debug)]
 pub struct Vault {
     // Maps normalized note names to notes
     notes: HashMap<String, Note>,
-    attachments: HashSet<String>,
+    attachments: HashMap<String, PathBuf>,
+    vault_path: PathBuf,
 }
 
 impl Vault {
-    pub fn new() -> Self {
-        Self {
-            notes: HashMap::new(),
-            attachments: HashSet::new(),
-        }
-    }
-
     pub fn add_note(&mut self, path: PathBuf) {
         println!("Adding note: {}", path.display());
         let name = path.file_stem().unwrap().to_str().unwrap();
-        let tokens = match Lexer::from_file(path.as_path()) {
+        let tokens: Vec<Token> = match Lexer::from_file(path.as_path()) {
             Ok(lexer) => lexer.collect(),
             Err(e) => {
                 eprintln!("ERROR: {:?}\nSkipping file '{}'.", e, path.display());
                 return;
             }
         };
+
+        let (frontmatter, tokens) = match tokens.first() {
+            Some(Token::Frontmatter(f)) => (f.clone(), tokens.split_first().unwrap().1.to_vec()),
+            _ => (Yaml::Hash(yaml_rust::yaml::Hash::new()), tokens),
+        };
+
         let note = Note {
+            path: path.strip_prefix(&self.vault_path).unwrap().to_path_buf(),
             name: name.to_string(),
             tokens,
+            frontmatter,
             links: Vec::new(),
             tags: Vec::new(),
             backlinks: Vec::new(),
-            
         };
         let normalized_name = normalize_name(name.to_string());
         self.notes.insert(normalized_name, note);
@@ -60,12 +112,15 @@ impl Vault {
     fn add_attachment(&mut self, path: PathBuf) {
         println!("Adding attachment: {:?}", path.display());
         let name = normalize_name(path.file_name().unwrap().to_str().unwrap().to_string());
-        self.attachments.insert(name);
+        self.attachments.insert(name.into(), path);
     }
 
-    fn add_dir(&mut self, path: PathBuf) -> io::Result<()> {
+    fn add_dir(&mut self, path: &PathBuf) -> io::Result<()> {
         match path.file_name().map(|n| n.to_str()) {
-            Some(Some(".git")) | Some(Some(".obsidian")) | Some(Some(".trash")) | Some(Some("Excalidraw")) => return Ok(()),
+            Some(Some(".git"))
+            | Some(Some(".obsidian"))
+            | Some(Some(".trash"))
+            | Some(Some("Excalidraw")) => return Ok(()),
             _ => {}
         }
 
@@ -83,15 +138,19 @@ impl Vault {
                     None => self.add_attachment(file_path),
                 }
             } else if file_path.is_dir() {
-                self.add_dir(file_path)?;
+                self.add_dir(&file_path)?;
             }
         }
         Ok(())
     }
 
     pub fn from_directory(path: PathBuf) -> io::Result<Self> {
-        let mut vault = Self::new();
-        vault.add_dir(path)?;
+        let mut vault = Self {
+            notes: HashMap::new(),
+            attachments: HashMap::new(),
+            vault_path: path.clone(),
+        };
+        vault.add_dir(&path)?;
         Ok(vault)
     }
 
@@ -99,14 +158,13 @@ impl Vault {
         for (note_name, mut note) in self.notes.clone() {
             for token in note.tokens.clone() {
                 match token {
-                    Token::Text(_) => {},
-                    Token::Header(_, _) => {},
-                    Token::Callout(_) => {},
-                    Token::Quote(_) => {},
-                    Token::Frontmatter(_) => {},
+                    Token::Text(_) => {}
+                    Token::Header(_, _) => {}
+                    Token::Callout(_) => {}
+                    Token::Quote(_) => {}
+                    Token::Frontmatter(_) => {}
                     Token::Tag(tag) => note.tags.push(tag.to_string()),
                     Token::Link(link) => {
-
                         // if `dest` field is emply, the link points to itself and we don't have to
                         // do anything in that case.
                         if link.dest.is_empty() {
@@ -117,23 +175,52 @@ impl Vault {
                         let to_note = match self.notes.get_mut(&to_note_name) {
                             Some(n) => n,
                             None => {
-
                                 // Is it an attachment?
                                 if self.attachments.get(&to_note_name).is_some() {
                                     continue;
                                 }
 
-                                eprintln!("WARNING [{}]: Could not find linked note: '{}'", note_name, to_note_name);
+                                eprintln!(
+                                    "WARNING [{}]: Could not find linked note: '{}'",
+                                    note_name, to_note_name
+                                );
                                 continue;
-                            },
+                            }
                         };
                         note.links.push(to_note_name.clone());
                         to_note.backlinks.push(note_name.clone());
                         self.notes.insert(note_name.clone(), note.clone());
-                    },
+                    }
                 }
             }
         }
     }
 
+    pub fn output_to(&self, output_vault_path: PathBuf) {
+        // Convert Notes
+        for note in self.notes.values() {
+            let note_text = note.to_string();
+            let out_path = output_vault_path.join(&note.path);
+
+            let dir = out_path.parent().unwrap();
+            fs::create_dir_all(dir).unwrap();
+
+            fs::OpenOptions::new()
+                .write(true)
+                .create(true)
+                .open(out_path)
+                .unwrap()
+                .write_all(note_text.as_bytes())
+                .unwrap();
+        }
+
+        // Copy attachments
+        for attachment in self.attachments.values() {
+            let vault_path = self.vault_path.join(attachment);
+            let out_path = output_vault_path.join(attachment);
+            let dir = out_path.parent().unwrap();
+            fs::create_dir_all(dir).unwrap();
+            fs::copy(vault_path, out_path).unwrap();
+        }
+    }
 }
