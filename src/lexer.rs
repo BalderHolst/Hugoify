@@ -11,10 +11,11 @@ pub enum LexerError {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Link {
-    dest: String,
-    show_how: String,
-    options: Option<String>,
-    render: bool,
+    pub dest: String,
+    pub position: Option<String>,
+    pub show_how: String,
+    pub options: Option<String>,
+    pub render: bool,
 }
 
 #[allow(dead_code)]
@@ -34,7 +35,7 @@ pub enum Token {
     Link(Link),
     Callout(Callout),
     Quote(Vec<Token>),
-    Frontmatter(Yaml),
+    Frontmatter(Yaml), // This can only appear as the first token
 }
 
 impl Token {
@@ -59,9 +60,12 @@ impl ToString for Token {
                 "#".repeat(*level),
                 Self::tokens_to_string(title.clone()),
             ),
-            Token::Link(link) => match link.render {
-                true => format!("![{}]({})", link.show_how, link.dest),
-                false => format!("[{}]({})", link.show_how, link.dest),
+            Token::Link(link) => match (link.render, &link.position) {
+                (true, None) => format!("![{}]({})", link.show_how, link.dest),
+                (false, None) => format!("[{}]({})", link.show_how, link.dest),
+                (true, Some(position))  => format!("![{}#{}]({})", link.show_how, position, link.dest),
+                (false, Some(position)) => format!("[{}#{}]({})", link.show_how, position, link.dest),
+
             },
             Token::Callout(callout) => format!(
                 "{{{{< callout type=\"{}\" title=\"{}\" foldable=\"{}\" >}}}}\n{}{{{{< /callout >}}}}",
@@ -160,22 +164,31 @@ impl Lexer {
         // TODO: Give good error message
         assert_eq!(self.consume(), Some(']'));
 
+        let dest = fields[0].clone();
+        let (dest, position) = match dest.split_once('#') {
+            Some((d, p)) => (d.to_string(), Some(p.to_string())),
+            None => (dest, None),
+        };
+
         match fields.len() {
             0 => panic!("Emply link."),
             1 => Token::Link(Link {
-                dest: fields[0].clone(),
+                dest,
+                position,
                 show_how: fields[0].clone(),
                 options: None,
                 render: shown,
             }),
             2 => Token::Link(Link {
-                dest: fields[0].clone(),
+                dest,
+                position,
                 show_how: fields[1].clone(),
                 options: None,
                 render: shown,
             }),
             3 => Token::Link(Link {
-                dest: fields[0].clone(),
+                dest,
+                position,
                 show_how: fields[2].clone(),
                 options: Some(fields[1].clone()),
                 render: shown,
