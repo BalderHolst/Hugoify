@@ -290,11 +290,18 @@ impl Lexer {
             foldable = true;
         }
         self.consume_whitespace();
-        let mut title = Token::tokens_to_string(self.consume_line());
-        if title.ends_with('\n') {
-            title.pop();
+
+        // If the callout does not have a title
+        let title = if self.peak(-1) != Some('\n') {
+            let mut title = Token::tokens_to_string(self.consume_line());
+            if title.ends_with('\n') {
+                title.pop();
+            }
+            vec![Token::Text(title)]
         }
-        let title = vec![Token::Text(title)];
+        else {
+            vec![Token::Text("".to_string())]
+        };
 
         let contents = self.consume_quote();
 
