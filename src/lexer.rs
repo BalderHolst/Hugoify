@@ -327,7 +327,7 @@ impl Lexer {
         let mut yaml_text = String::new();
 
         while (self.peak(0), self.peak(1), self.peak(2)) != (Some('-'), Some('-'), Some('-'))
-            && !self.peak(2).is_none()
+            && self.peak(2).is_some()
         {
             yaml_text.push(
                 self.consume()

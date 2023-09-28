@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     fs,
     io::{self, Write},
     path::PathBuf,
@@ -9,10 +9,21 @@ use yaml_rust::Yaml;
 
 use crate::lexer::{Lexer, Token};
 
-fn normalize_name(name: String) -> String {
-    name.to_lowercase()
+fn normalize_name(mut name: String) -> String {
+
+    // 
+    if name.contains('/') {
+        eprint!("WARNING: Normalizing name with '/': `{name}`. Only using filename.");
+        name = name.split_once('/').unwrap().1.to_string();
+    }
+
+    name.chars().map(|c| match c {
+       ' ' => '-',
+       _ => c.to_lowercase().next().unwrap()
+    }).collect()
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Note {
     path: PathBuf, // Path within vault
@@ -62,7 +73,9 @@ impl ToString for Note {
             yaml_rust::YamlEmitter::new(&mut out_str)
                 .dump(&frontmatter)
                 .unwrap();
-            format!("---\n{}\n---", out_str)
+
+            // I do not know why, but a "---" is already added in the beginning of `out_str`
+            format!("{}\n---\n\n", out_str)
         };
 
         let body: String = self.tokens.iter().map(|t| t.to_string()).collect();
@@ -112,7 +125,7 @@ impl Vault {
     fn add_attachment(&mut self, path: PathBuf) {
         println!("Adding attachment: {:?}", path.display());
         let name = normalize_name(path.file_name().unwrap().to_str().unwrap().to_string());
-        self.attachments.insert(name.into(), path);
+        self.attachments.insert(name, path);
     }
 
     fn add_dir(&mut self, path: &PathBuf) -> io::Result<()> {
