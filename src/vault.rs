@@ -105,7 +105,7 @@ impl Vault {
             }
         };
 
-        let (frontmatter, tokens) = match tokens.first() {
+        let (mut frontmatter, tokens) = match tokens.first() {
             Some(Token::Frontmatter(f)) => (f.clone(), tokens.split_first().unwrap().1.to_vec()),
             _ => (Yaml::Hash(yaml_rust::yaml::Hash::new()), tokens),
         };
@@ -169,7 +169,7 @@ impl Vault {
     }
 
     pub fn from_directory(path: &PathBuf) -> io::Result<Self> {
-        let mut vault = Self {
+        let vault = Self {
             notes: HashMap::new(),
             attachments: HashMap::new(),
             vault_path: path.clone(),

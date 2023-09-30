@@ -298,8 +298,7 @@ impl Lexer {
                 title.pop();
             }
             vec![Token::Text(title)]
-        }
-        else {
+        } else {
             vec![Token::Text("".to_string())]
         };
 

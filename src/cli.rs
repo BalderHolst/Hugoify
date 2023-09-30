@@ -4,7 +4,6 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-
     /// Path to your Obsidian vault
     #[clap(index = 1)]
     pub vault: String,
