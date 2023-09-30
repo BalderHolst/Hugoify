@@ -10,17 +10,18 @@ use yaml_rust::Yaml;
 use crate::lexer::{Lexer, Token};
 
 fn normalize_name(mut name: String) -> String {
-
-    // 
+    //
     if name.contains('/') {
         eprint!("WARNING: Normalizing name with '/': `{name}`. Only using filename.");
         name = name.split_once('/').unwrap().1.to_string();
     }
 
-    name.chars().map(|c| match c {
-       ' ' => '-',
-       _ => c.to_lowercase().next().unwrap()
-    }).collect()
+    name.chars()
+        .map(|c| match c {
+            ' ' => '-',
+            _ => c.to_lowercase().next().unwrap(),
+        })
+        .collect()
 }
 
 #[allow(dead_code)]
