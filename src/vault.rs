@@ -110,6 +110,16 @@ impl Vault {
             _ => (Yaml::Hash(yaml_rust::yaml::Hash::new()), tokens),
         };
 
+        match &mut frontmatter {
+            Yaml::Hash(f) => {
+                f.insert(
+                    Yaml::String("type".to_string()),
+                    Yaml::String("note".to_string()),
+                );
+            }
+            _ => panic!("Frontmatter yaml root should be `Hash`."),
+        }
+
         let note = Note {
             path: path.strip_prefix(&self.vault_path).unwrap().to_path_buf(),
             name: name.to_string(),
@@ -202,9 +212,9 @@ impl Vault {
                         };
                         note.links.push(to_note_name.clone());
                         to_note.backlinks.push(note_name.clone());
-                        self.notes.insert(note_name.clone(), note.clone());
                     }
                 }
+                self.notes.insert(note_name.clone(), note.clone());
             }
         }
     }
