@@ -9,8 +9,7 @@ use yaml_rust::Yaml;
 
 use crate::lexer::{Lexer, Token};
 
-fn normalize_name(mut name: String) -> String {
-    //
+fn normalize_string(mut name: String) -> String {
     if name.contains('/') {
         eprint!("WARNING: Normalizing name with '/': `{name}`. Only using filename.");
         name = name.split_once('/').unwrap().1.to_string();
@@ -26,7 +25,8 @@ fn normalize_name(mut name: String) -> String {
 
 #[derive(Debug, Clone)]
 pub struct Note {
-    path: PathBuf, // Path within vault
+    /// Relative path within vault
+    path: PathBuf,
     name: String,
     tokens: Vec<Token>,
     frontmatter: Yaml,
@@ -40,10 +40,9 @@ impl ToString for Note {
         // This could probably be done better...
         let frontmatter = match self.frontmatter.clone() {
             Yaml::Hash(mut hash) => {
-
                 // Title
                 hash.insert(
-                    Yaml::String("title".to_string()), 
+                    Yaml::String("title".to_string()),
                     Yaml::String(self.name.clone()),
                 );
 
@@ -135,13 +134,13 @@ impl Vault {
             tags: Vec::new(),
             backlinks: Vec::new(),
         };
-        let normalized_name = normalize_name(name.to_string());
+        let normalized_name = normalize_string(name.to_string());
         self.notes.insert(normalized_name, note);
     }
 
     fn add_attachment(&mut self, path: PathBuf) {
         println!("Adding attachment: {:?}", path.display());
-        let name = normalize_name(path.file_name().unwrap().to_str().unwrap().to_string());
+        let name = normalize_string(path.file_name().unwrap().to_str().unwrap().to_string());
         self.attachments.insert(name, path);
     }
 
@@ -200,7 +199,7 @@ impl Vault {
                             continue;
                         }
 
-                        let to_note_name = normalize_name(link.dest.clone());
+                        let to_note_name = normalize_string(link.dest.clone());
                         let to_note = match self.notes.get_mut(&to_note_name) {
                             Some(n) => n,
                             None => {
@@ -219,7 +218,9 @@ impl Vault {
 
                         // TODO: Add path instead of link
                         note.links.push(to_note_name.clone());
-                        to_note.backlinks.push("/".to_string() + &note.path.file_stem().unwrap().to_str().unwrap());
+                        to_note.backlinks.push(
+                            "/".to_string() + &note.path.file_stem().unwrap().to_str().unwrap(),
+                        );
                     }
                 }
                 self.notes.insert(note_name.clone(), note.clone());
