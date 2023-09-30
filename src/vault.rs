@@ -24,7 +24,6 @@ fn normalize_name(mut name: String) -> String {
         .collect()
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct Note {
     path: PathBuf, // Path within vault
@@ -41,6 +40,13 @@ impl ToString for Note {
         // This could probably be done better...
         let frontmatter = match self.frontmatter.clone() {
             Yaml::Hash(mut hash) => {
+
+                // Title
+                hash.insert(
+                    Yaml::String("title".to_string()), 
+                    Yaml::String(self.name.clone()),
+                );
+
                 // Tags
                 hash.insert(
                     Yaml::String("tags".to_string()),
@@ -210,8 +216,10 @@ impl Vault {
                                 continue;
                             }
                         };
+
+                        // TODO: Add path instead of link
                         note.links.push(to_note_name.clone());
-                        to_note.backlinks.push(note_name.clone());
+                        to_note.backlinks.push("/".to_string() + &note.path.file_stem().unwrap().to_str().unwrap());
                     }
                 }
                 self.notes.insert(note_name.clone(), note.clone());
