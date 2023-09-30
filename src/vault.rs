@@ -93,7 +93,7 @@ pub struct Vault {
 }
 
 impl Vault {
-    pub fn add_note(&mut self, path: PathBuf) {
+    pub fn add_note(&mut self, path: &PathBuf) {
         println!("Adding note: {}", path.display());
         let name = path.file_stem().unwrap().to_str().unwrap();
         let tokens: Vec<Token> = match Lexer::from_file(path.as_path()) {
@@ -128,7 +128,7 @@ impl Vault {
         self.attachments.insert(name, path);
     }
 
-    fn add_dir(&mut self, path: &PathBuf) -> io::Result<()> {
+    pub fn add_dir(&mut self, path: &PathBuf) -> io::Result<()> {
         match path.file_name().map(|n| n.to_str()) {
             Some(Some(".git"))
             | Some(Some(".obsidian"))
@@ -145,7 +145,7 @@ impl Vault {
             if file_path.is_file() {
                 match file_path.extension() {
                     Some(ex) => match ex.to_str() {
-                        Some("md") => self.add_note(file_path),
+                        Some("md") => self.add_note(&file_path),
                         _ => self.add_attachment(file_path),
                     },
                     None => self.add_attachment(file_path),
@@ -157,13 +157,12 @@ impl Vault {
         Ok(())
     }
 
-    pub fn from_directory(path: PathBuf) -> io::Result<Self> {
+    pub fn from_directory(path: &PathBuf) -> io::Result<Self> {
         let mut vault = Self {
             notes: HashMap::new(),
             attachments: HashMap::new(),
             vault_path: path.clone(),
         };
-        vault.add_dir(&path)?;
         Ok(vault)
     }
 
