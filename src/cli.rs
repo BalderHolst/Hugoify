@@ -11,4 +11,8 @@ pub struct Args {
     /// Path to your output directory
     #[clap(index = 2)]
     pub dest: String,
+
+    #[arg(short('H'), long)]
+    pub hugo_root: Option<String>,
+    
 }

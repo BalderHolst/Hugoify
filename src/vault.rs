@@ -98,7 +98,7 @@ impl ToString for Note {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Vault {
     // Maps normalized note names to notes
     notes: HashMap<String, Note>,
@@ -183,29 +183,31 @@ impl Vault {
         Ok(())
     }
 
-    // TODO: Add option to pass hugo_site_path directly
-    pub fn from_directory(path: &PathBuf, output_path: PathBuf ) -> io::Result<Self> {
+    pub fn from_directory(path: &PathBuf, output_path: PathBuf, hugo_site_path: Option<PathBuf> ) -> io::Result<Self> {
 
-        let hugo_site_path = {
-            let mut site_path = output_path.clone();
+        let hugo_site_path = match hugo_site_path {
+            Some(p) => p,
+            None => {
+                let mut site_path = output_path.clone();
 
-            'outer: loop {
-                dbg!(&site_path);
-                if site_path.is_dir() {
-                    for file in fs::read_dir(&site_path).unwrap() {
-                        let file = file.unwrap();
-                        if file.file_name() == std::ffi::OsString::from("config.toml") {
-                            break 'outer;
+                'outer: loop {
+                    dbg!(&site_path);
+                    if site_path.is_dir() {
+                        for file in fs::read_dir(&site_path).unwrap() {
+                            let file = file.unwrap();
+                            if file.file_name() == std::ffi::OsString::from("config.toml") {
+                                break 'outer;
+                            }
                         }
                     }
-                }
 
-                match site_path.parent() {
-                    Some(p) => site_path = p.to_path_buf(),
-                    None => panic!("Could not find hugo site path :/"),
+                    match site_path.parent() {
+                        Some(p) => site_path = p.to_path_buf(),
+                        None => panic!("Could not find hugo site path."),
+                    }
                 }
+                site_path
             }
-            site_path
         };
 
         println!("Found Hugo site path :'{}'", hugo_site_path.display());
