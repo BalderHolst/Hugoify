@@ -187,15 +187,17 @@ impl Vault {
         Ok(())
     }
 
-    pub fn from_directory(path: &PathBuf, output_path: PathBuf, hugo_site_path: Option<PathBuf> ) -> io::Result<Self> {
-
+    pub fn from_directory(
+        path: &PathBuf,
+        output_path: PathBuf,
+        hugo_site_path: Option<PathBuf>,
+    ) -> io::Result<Self> {
         let hugo_site_path = match hugo_site_path {
             Some(p) => p,
             None => {
                 let mut site_path = output_path.clone();
 
                 'outer: loop {
-                    dbg!(&site_path);
                     if site_path.is_dir() {
                         for file in fs::read_dir(&site_path).unwrap() {
                             let file = file.unwrap();
@@ -227,7 +229,8 @@ impl Vault {
     }
 
     pub fn index(&mut self) {
-        for (note_name, mut note) in self.notes.clone() {
+        for note_name in self.notes.clone().keys() {
+            let mut note = self.notes.get(&note_name.clone()).unwrap().clone();
             for token in note.tokens.clone() {
                 match token {
                     Token::Text(_) => {}
@@ -244,8 +247,8 @@ impl Vault {
                         }
 
                         let to_note_name = normalize_string(link.dest.clone());
-                        let to_note = match self.notes.get_mut(&to_note_name) {
-                            Some(n) => n,
+                        let mut to_note = match self.notes.get(&to_note_name) {
+                            Some(n) => n.clone(),
                             None => {
                                 // Is it an attachment?
                                 if self.attachments.get(&to_note_name).is_some() {
@@ -263,8 +266,11 @@ impl Vault {
                         // TODO: Add path instead of link
                         note.links.push(to_note_name.clone());
                         to_note.backlinks.push(
-                            self.hugo_site_path.to_str().unwrap().to_string() + "/" + &normalize_path_to_string(&note.path),
+                            self.hugo_site_path.to_str().unwrap().to_string()
+                                + "/"
+                                + &normalize_path_to_string(&note.path),
                         );
+                        self.notes.insert(to_note_name, to_note);
                     }
                 }
                 self.notes.insert(note_name.clone(), note.clone());
