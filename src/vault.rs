@@ -9,10 +9,12 @@ use yaml_rust::Yaml;
 
 use crate::lexer::{Lexer, Token};
 
-// TODO: Use this
-fn normalize_path(path: PathBuf) -> PathBuf {
-    let s = path.to_str().unwrap().split('/').map(|s| normalize_string(s.to_string())).collect::<Vec<String>>().join("/").to_string();
-    PathBuf::from(s)
+fn normalize_path_to_string(path: &PathBuf) -> String {
+    path.to_str().unwrap().split('/').map(|s| normalize_string(s.to_string())).collect::<Vec<String>>().join("/").to_string()
+}
+
+fn normalize_path(path: &PathBuf) -> PathBuf {
+    PathBuf::from(normalize_path_to_string(path))
 }
 
 fn normalize_string(mut name: String) -> String {
@@ -102,6 +104,8 @@ pub struct Vault {
     notes: HashMap<String, Note>,
     attachments: HashMap<String, PathBuf>,
     vault_path: PathBuf,
+    output_path: PathBuf,
+    hugo_site_path: PathBuf,
 }
 
 impl Vault {
@@ -179,11 +183,39 @@ impl Vault {
         Ok(())
     }
 
-    pub fn from_directory(path: &PathBuf) -> io::Result<Self> {
+    // TODO: Add option to pass hugo_site_path directly
+    pub fn from_directory(path: &PathBuf, output_path: PathBuf ) -> io::Result<Self> {
+
+        let hugo_site_path = {
+            let mut site_path = output_path.clone();
+
+            'outer: loop {
+                dbg!(&site_path);
+                if site_path.is_dir() {
+                    for file in fs::read_dir(&site_path).unwrap() {
+                        let file = file.unwrap();
+                        if file.file_name() == std::ffi::OsString::from("config.toml") {
+                            break 'outer;
+                        }
+                    }
+                }
+
+                match site_path.parent() {
+                    Some(p) => site_path = p.to_path_buf(),
+                    None => panic!("Could not find hugo site path :/"),
+                }
+            }
+            site_path
+        };
+
+        println!("Found Hugo site path :'{}'", hugo_site_path.display());
+
         let vault = Self {
             notes: HashMap::new(),
             attachments: HashMap::new(),
             vault_path: path.clone(),
+            output_path,
+            hugo_site_path,
         };
         Ok(vault)
     }
@@ -225,7 +257,7 @@ impl Vault {
                         // TODO: Add path instead of link
                         note.links.push(to_note_name.clone());
                         to_note.backlinks.push(
-                            "/".to_string() + &note.path.file_stem().unwrap().to_str().unwrap(),
+                            self.hugo_site_path.to_str().unwrap().to_string() + "/" + &normalize_path_to_string(&note.path),
                         );
                     }
                 }
@@ -234,11 +266,11 @@ impl Vault {
         }
     }
 
-    pub fn output_to(&self, output_vault_path: PathBuf) {
+    pub fn output(&self) {
         // Convert Notes
         for note in self.notes.values() {
             let note_text = note.to_string();
-            let out_path = output_vault_path.join(&note.path);
+            let out_path = self.output_path.join(&note.path);
 
             let dir = out_path.parent().unwrap();
             fs::create_dir_all(dir).unwrap();
@@ -255,7 +287,7 @@ impl Vault {
         // Copy attachments
         for attachment in self.attachments.values() {
             let vault_path = self.vault_path.join(attachment);
-            let out_path = output_vault_path.join(attachment);
+            let out_path = self.output_path.join(attachment);
             let dir = out_path.parent().unwrap();
             fs::create_dir_all(dir).unwrap();
             fs::copy(vault_path, out_path).unwrap();

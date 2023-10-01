@@ -68,7 +68,7 @@ impl ToString for Token {
 
             },
             Token::Callout(callout) => format!(
-                "{{{{< callout type=\"{}\" title=\"{}\" foldable=\"{}\" >}}}}\n{}{{{{< /callout >}}}}",
+                "\n{{{{< callout type=\"{}\" title=\"{}\" foldable=\"{}\" >}}}}\n{}{{{{< /callout >}}}}\n",
                 callout.kind,
                 Self::tokens_to_string(callout.title.clone()),
                 if callout.foldable { "true" } else { "false" },
