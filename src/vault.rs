@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     fs,
     io::{self, Write},
-    path::PathBuf, env::join_paths,
+    path::PathBuf,
 };
 
 use yaml_rust::Yaml;
@@ -10,19 +10,18 @@ use yaml_rust::Yaml;
 use crate::lexer::{Lexer, Token};
 
 fn normalize_path_to_string(path: &PathBuf) -> String {
-    path.to_str()
-        .unwrap()
-        .split('/')
-        .map(|s| normalize_string(s.to_string()))
+    path.components()
+        .map(|s| normalize_string(s.as_os_str().to_str().unwrap().to_string()))
         .collect::<Vec<String>>()
         .join("/")
-        .to_string()
 }
 
 fn normalize_path(path: &PathBuf) -> PathBuf {
-    PathBuf::from(normalize_path_to_string(path))
+    let path = path.parent().unwrap().join(path.file_stem().unwrap());
+    PathBuf::from(normalize_path_to_string(&path))
 }
 
+// TODO: Use references
 fn normalize_string(mut name: String) -> String {
     if name.contains('/') {
         eprint!("WARNING: Normalizing name with '/': `{name}`. Only using filename.");
@@ -49,6 +48,11 @@ pub struct Note {
     links: Vec<String>,
 }
 
+impl Note {
+    pub fn path_debth(&self) -> usize {
+        self.path.components().count()
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vault {
@@ -248,39 +252,52 @@ impl Vault {
         }
     }
 
-    pub fn tokens_to_string<I>(&self, tokens: I) -> String
+    pub fn tokens_to_string<I>(&self, note: &Note, tokens: I) -> String
     where
         I: IntoIterator<Item = Token>,
     {
         tokens
             .into_iter()
-            .map(|token| self.token_to_string(&token))
+            .map(|token| self.token_to_string(note, &token))
             .collect::<String>()
     }
 
-    fn token_to_string(&self, token: &Token) -> String {
+    fn get_note(&self, normalized_name: &String) -> Option<&Note> {
+        self.notes.get(normalized_name)
+    }
+
+    fn token_to_string(&self, note: &Note, token: &Token) -> String {
         match token {
             Token::Text(s) => s.clone(),
             Token::Tag(s) => format!("#{s}"),
             Token::Header(level, title) => format!(
                 "{} {}",
                 "#".repeat(*level),
-                self.tokens_to_string(title.clone()),
+                self.tokens_to_string(note, title.clone()),
             ),
-            Token::Link(link) => match (link.render, &link.position) {
-                (true, None) => format!("![{}]({})", link.show_how, link.dest),
-                (false, None) => format!("[{}]({})", link.show_how, link.dest),
-                (true, Some(position))  => format!("![{}#{}]({})", link.show_how, position, link.dest),
-                (false, Some(position)) => format!("[{}#{}]({})", link.show_how, position, link.dest),
+            Token::Link(link) => {
+                let normalized_path = match self.get_note(&normalize_string(link.dest.clone())){
+                    Some(note) => normalize_path(&note.path),
+
+                    // Remove link if it does not point to anything
+                    None => return link.show_how.clone(),
+                };
+                let url = "../".repeat(note.path_debth()) + normalized_path.to_str().unwrap();
+                match (link.render, &link.position) {
+                    (true, None) => format!("![{}]({})", link.show_how, url),
+                    (false, None) => format!("[{}]({})", link.show_how, url),
+                    (true, Some(position))  => format!("![{}#{}]({})", link.show_how, position, url),
+                    (false, Some(position)) => format!("[{}#{}]({})", link.show_how, position, url),
+                }
             },
             Token::Callout(callout) => format!(
                 "\n{{{{< callout type=\"{}\" title=\"{}\" foldable=\"{}\" >}}}}\n{}{{{{< /callout >}}}}\n",
                 callout.kind,
-                self.tokens_to_string(callout.title.clone()),
+                self.tokens_to_string(note, callout.title.clone()),
                 if callout.foldable { "true" } else { "false" },
-                self.tokens_to_string(callout.contents.clone()),
+                self.tokens_to_string(note, callout.contents.clone()),
             ),
-            Token::Quote(quote) => quote.iter().map(|token| "> ".to_string() + self.token_to_string(token).as_str()).collect(),
+            Token::Quote(quote) => quote.iter().map(|token| "> ".to_string() + self.token_to_string(note, token).as_str()).collect(),
             Token::Frontmatter(_) => panic!("Frontmatter should never be part of a note body."),
         }
     }
@@ -333,7 +350,7 @@ impl Vault {
             format!("{}\n---\n\n", out_str)
         };
 
-        let body: String = self.tokens_to_string(note.tokens.clone());
+        let body: String = self.tokens_to_string(note, note.tokens.clone());
 
         frontmatter_text + body.as_str()
     }
