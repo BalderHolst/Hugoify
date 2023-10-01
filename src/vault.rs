@@ -2,7 +2,7 @@ use std::{
     collections::HashMap,
     fs,
     io::{self, Write},
-    path::PathBuf,
+    path::PathBuf, env::join_paths,
 };
 
 use yaml_rust::Yaml;
@@ -10,7 +10,13 @@ use yaml_rust::Yaml;
 use crate::lexer::{Lexer, Token};
 
 fn normalize_path_to_string(path: &PathBuf) -> String {
-    path.to_str().unwrap().split('/').map(|s| normalize_string(s.to_string())).collect::<Vec<String>>().join("/").to_string()
+    path.to_str()
+        .unwrap()
+        .split('/')
+        .map(|s| normalize_string(s.to_string()))
+        .collect::<Vec<String>>()
+        .join("/")
+        .to_string()
 }
 
 fn normalize_path(path: &PathBuf) -> PathBuf {
@@ -102,9 +108,13 @@ impl ToString for Note {
 pub struct Vault {
     // Maps normalized note names to notes
     notes: HashMap<String, Note>,
+    // Maps normalized attachment names to their relative paths within vault
     attachments: HashMap<String, PathBuf>,
-    vault_path: PathBuf,
-    output_path: PathBuf,
+    // Path to Obidian vault
+    obsidian_vault_path: PathBuf,
+    // Path to the generated vault relative to `hugo_site_path`
+    hugo_vault_path: PathBuf,
+    // The path to the hugo site on local machine
     hugo_site_path: PathBuf,
 }
 
@@ -136,7 +146,10 @@ impl Vault {
         }
 
         let note = Note {
-            path: path.strip_prefix(&self.vault_path).unwrap().to_path_buf(),
+            path: path
+                .strip_prefix(&self.obsidian_vault_path)
+                .unwrap()
+                .to_path_buf(),
             name: name.to_string(),
             tokens,
             frontmatter,
@@ -154,6 +167,7 @@ impl Vault {
         self.attachments.insert(name, path);
     }
 
+    #[cfg(test)]
     pub fn notes(&self) -> &HashMap<String, Note> {
         &self.notes
     }
@@ -218,11 +232,16 @@ impl Vault {
 
         println!("Found Hugo site path :'{}'", hugo_site_path.display());
 
+        let hugo_vault_path = output_path
+            .strip_prefix(&hugo_site_path)
+            .unwrap()
+            .to_path_buf();
+
         let vault = Self {
             notes: HashMap::new(),
             attachments: HashMap::new(),
-            vault_path: path.clone(),
-            output_path,
+            obsidian_vault_path: path.clone(),
+            hugo_vault_path,
             hugo_site_path,
         };
         Ok(vault)
@@ -265,11 +284,16 @@ impl Vault {
 
                         // TODO: Add path instead of link
                         note.links.push(to_note_name.clone());
-                        to_note.backlinks.push(
-                            self.hugo_site_path.to_str().unwrap().to_string()
-                                + "/"
-                                + &normalize_path_to_string(&note.path),
-                        );
+
+                        let hugo_site_path = self
+                            .hugo_vault_path
+                            .strip_prefix("content")
+                            .unwrap()
+                            .join(&note.path.parent().unwrap())
+                            .join(&note.path.file_stem().unwrap());
+                        to_note
+                            .backlinks
+                            .push("/".to_string() + &normalize_path_to_string(&hugo_site_path));
                         self.notes.insert(to_note_name, to_note);
                     }
                 }
@@ -282,7 +306,10 @@ impl Vault {
         // Convert Notes
         for note in self.notes.values() {
             let note_text = note.to_string();
-            let out_path = self.output_path.join(&note.path);
+            let out_path = self
+                .hugo_site_path
+                .join(&self.hugo_vault_path)
+                .join(&note.path);
 
             let dir = out_path.parent().unwrap();
             fs::create_dir_all(dir).unwrap();
@@ -299,8 +326,8 @@ impl Vault {
 
         // Copy attachments
         for attachment in self.attachments.values() {
-            let vault_path = self.vault_path.join(attachment);
-            let out_path = self.output_path.join(attachment);
+            let vault_path = self.obsidian_vault_path.join(attachment);
+            let out_path = self.hugo_vault_path.join(attachment);
             let dir = out_path.parent().unwrap();
             fs::create_dir_all(dir).unwrap();
             fs::copy(vault_path, out_path).unwrap();

@@ -29,7 +29,8 @@ fn main() {
                 exit(1);
             }
         };
-        let mut vault = Vault::from_directory(&dir.to_path_buf(), output_path, hugo_root_path).unwrap();
+        let mut vault =
+            Vault::from_directory(&dir.to_path_buf(), output_path, hugo_root_path).unwrap();
         vault.add_note(&input_path);
         vault
     } else {
@@ -42,8 +43,8 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use std::{path::PathBuf, fs};
     use super::*;
+    use std::{fs, path::PathBuf};
 
     struct TmpDir(PathBuf);
     impl Drop for TmpDir {
@@ -62,7 +63,8 @@ mod tests {
         let out_dir = PathBuf::from("test_output");
         let dir_handle = TmpDir(out_dir.clone());
         let input_dir = &PathBuf::from("tests/test_vault");
-        let mut vault = Vault::from_directory(input_dir, out_dir, Some(PathBuf::from("."))).unwrap();
+        let mut vault =
+            Vault::from_directory(input_dir, out_dir, Some(PathBuf::from("."))).unwrap();
         vault.add_dir(input_dir).unwrap();
 
         let mut vaults = vec![];
@@ -76,17 +78,19 @@ mod tests {
             assert_eq!(new_vault, indexed_vault);
             vaults.push(new_vault);
         }
-        
+
         for (index, note) in indexed_vault.notes() {
             let reference_note_string = note.to_string();
             for (i, other_vault) in vaults.iter().enumerate() {
                 let other_note = other_vault.notes().get(index).unwrap();
                 let other_note_string = other_note.to_string();
                 println!("{other_note_string}");
-                assert_eq!(reference_note_string, other_note_string, "Failed on vault nr: {}", i);
+                assert_eq!(
+                    reference_note_string, other_note_string,
+                    "Failed on vault nr: {}",
+                    i
+                );
             }
         }
-
     }
-
 }
