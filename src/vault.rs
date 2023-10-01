@@ -284,6 +284,7 @@ impl Vault {
             fs::OpenOptions::new()
                 .write(true)
                 .create(true)
+                .truncate(true)
                 .open(out_path)
                 .unwrap()
                 .write_all(note_text.as_bytes())
