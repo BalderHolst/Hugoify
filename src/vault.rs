@@ -31,7 +31,7 @@ fn normalize_string(mut name: String) -> String {
         .collect()
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Note {
     /// Relative path within vault
     path: PathBuf,
@@ -98,7 +98,7 @@ impl ToString for Note {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vault {
     // Maps normalized note names to notes
     notes: HashMap<String, Note>,
@@ -152,6 +152,10 @@ impl Vault {
         println!("Adding attachment: {:?}", path.display());
         let name = normalize_string(path.file_name().unwrap().to_str().unwrap().to_string());
         self.attachments.insert(name, path);
+    }
+
+    pub fn notes(&self) -> &HashMap<String, Note> {
+        &self.notes
     }
 
     pub fn add_dir(&mut self, path: &PathBuf) -> io::Result<()> {

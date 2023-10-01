@@ -9,7 +9,7 @@ pub enum LexerError {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Link {
     pub dest: String,
     pub position: Option<String>,
@@ -19,7 +19,7 @@ pub struct Link {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Callout {
     kind: String,
     title: Vec<Token>,
@@ -27,7 +27,7 @@ pub struct Callout {
     foldable: bool,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Text(String),
     Tag(String),
