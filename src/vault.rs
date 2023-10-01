@@ -56,7 +56,7 @@ impl ToString for Note {
 
                 // Tags
                 hash.insert(
-                    Yaml::String("tags".to_string()),
+                    Yaml::String("note-tags".to_string()),
                     Yaml::Array(self.tags.iter().map(|t| Yaml::String(t.clone())).collect()),
                 );
 
