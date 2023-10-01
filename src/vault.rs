@@ -9,6 +9,12 @@ use yaml_rust::Yaml;
 
 use crate::lexer::{Lexer, Token};
 
+// TODO: Use this
+fn normalize_path(path: PathBuf) -> PathBuf {
+    let s = path.to_str().unwrap().split('/').map(|s| normalize_string(s.to_string())).collect::<Vec<String>>().join("/").to_string();
+    PathBuf::from(s)
+}
+
 fn normalize_string(mut name: String) -> String {
     if name.contains('/') {
         eprint!("WARNING: Normalizing name with '/': `{name}`. Only using filename.");
