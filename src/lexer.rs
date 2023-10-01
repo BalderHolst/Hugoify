@@ -21,10 +21,10 @@ pub struct Link {
 #[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub struct Callout {
-    kind: String,
-    title: Vec<Token>,
-    contents: Vec<Token>,
-    foldable: bool,
+    pub kind: String,
+    pub title: Vec<Token>,
+    pub contents: Vec<Token>,
+    pub foldable: bool,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -36,48 +36,6 @@ pub enum Token {
     Callout(Callout),
     Quote(Vec<Token>),
     Frontmatter(Yaml), // This can only appear as the first token
-}
-
-impl Token {
-    pub fn tokens_to_string<I>(tokens: I) -> String
-    where
-        I: IntoIterator<Item = Token>,
-    {
-        tokens
-            .into_iter()
-            .map(|token| token.to_string())
-            .collect::<String>()
-    }
-}
-
-impl ToString for Token {
-    fn to_string(&self) -> String {
-        match self {
-            Token::Text(s) => s.clone(),
-            Token::Tag(s) => format!("#{s}"),
-            Token::Header(level, title) => format!(
-                "{} {}",
-                "#".repeat(*level),
-                Self::tokens_to_string(title.clone()),
-            ),
-            Token::Link(link) => match (link.render, &link.position) {
-                (true, None) => format!("![{}]({})", link.show_how, link.dest),
-                (false, None) => format!("[{}]({})", link.show_how, link.dest),
-                (true, Some(position))  => format!("![{}#{}]({})", link.show_how, position, link.dest),
-                (false, Some(position)) => format!("[{}#{}]({})", link.show_how, position, link.dest),
-
-            },
-            Token::Callout(callout) => format!(
-                "\n{{{{< callout type=\"{}\" title=\"{}\" foldable=\"{}\" >}}}}\n{}{{{{< /callout >}}}}\n",
-                callout.kind,
-                Self::tokens_to_string(callout.title.clone()),
-                if callout.foldable { "true" } else { "false" },
-                Token::tokens_to_string(callout.contents.clone()),
-            ),
-            Token::Quote(quote) => quote.iter().map(|token| "> ".to_string() + token.to_string().as_str()).collect(),
-            Token::Frontmatter(_) => panic!("Frontmatter should never be part of a note body."),
-        }
-    }
 }
 
 pub struct Lexer {
@@ -293,11 +251,12 @@ impl Lexer {
 
         // If the callout does not have a title
         let title = if self.peak(-1) != Some('\n') {
-            let mut title = Token::tokens_to_string(self.consume_line());
-            if title.ends_with('\n') {
-                title.pop();
+            let mut title = self.consume_line();
+            match title.last() {
+                Some(Token::Text(t)) if t.ends_with('\n') => { title.pop(); },
+                _ => {},
             }
-            vec![Token::Text(title)]
+            title
         } else {
             vec![Token::Text("".to_string())]
         };

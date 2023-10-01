@@ -49,60 +49,6 @@ pub struct Note {
     links: Vec<String>,
 }
 
-impl ToString for Note {
-    fn to_string(&self) -> String {
-        // This could probably be done better...
-        let frontmatter = match self.frontmatter.clone() {
-            Yaml::Hash(mut hash) => {
-                // Title
-                hash.insert(
-                    Yaml::String("title".to_string()),
-                    Yaml::String(self.name.clone()),
-                );
-
-                // Tags
-                hash.insert(
-                    Yaml::String("note-tags".to_string()),
-                    Yaml::Array(self.tags.iter().map(|t| Yaml::String(t.clone())).collect()),
-                );
-
-                // Backlinks
-                hash.insert(
-                    Yaml::String("backlinks".to_string()),
-                    Yaml::Array(
-                        self.backlinks
-                            .iter()
-                            .map(|t| Yaml::String(t.clone()))
-                            .collect(),
-                    ),
-                );
-
-                // Links
-                hash.insert(
-                    Yaml::String("links".to_string()),
-                    Yaml::Array(self.links.iter().map(|t| Yaml::String(t.clone())).collect()),
-                );
-
-                Yaml::Hash(hash)
-            }
-            _ => panic!("Frontmatter should always be hash."),
-        };
-
-        let frontmatter_text = {
-            let mut out_str = String::new();
-            yaml_rust::YamlEmitter::new(&mut out_str)
-                .dump(&frontmatter)
-                .unwrap();
-
-            // I do not know why, but a "---" is already added in the beginning of `out_str`
-            format!("{}\n---\n\n", out_str)
-        };
-
-        let body: String = self.tokens.iter().map(|t| t.to_string()).collect();
-
-        frontmatter_text + body.as_str()
-    }
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vault {
@@ -302,10 +248,100 @@ impl Vault {
         }
     }
 
+    pub fn tokens_to_string<I>(&self, tokens: I) -> String
+    where
+        I: IntoIterator<Item = Token>,
+    {
+        tokens
+            .into_iter()
+            .map(|token| self.token_to_string(&token))
+            .collect::<String>()
+    }
+
+    fn token_to_string(&self, token: &Token) -> String {
+        match token {
+            Token::Text(s) => s.clone(),
+            Token::Tag(s) => format!("#{s}"),
+            Token::Header(level, title) => format!(
+                "{} {}",
+                "#".repeat(*level),
+                self.tokens_to_string(title.clone()),
+            ),
+            Token::Link(link) => match (link.render, &link.position) {
+                (true, None) => format!("![{}]({})", link.show_how, link.dest),
+                (false, None) => format!("[{}]({})", link.show_how, link.dest),
+                (true, Some(position))  => format!("![{}#{}]({})", link.show_how, position, link.dest),
+                (false, Some(position)) => format!("[{}#{}]({})", link.show_how, position, link.dest),
+            },
+            Token::Callout(callout) => format!(
+                "\n{{{{< callout type=\"{}\" title=\"{}\" foldable=\"{}\" >}}}}\n{}{{{{< /callout >}}}}\n",
+                callout.kind,
+                self.tokens_to_string(callout.title.clone()),
+                if callout.foldable { "true" } else { "false" },
+                self.tokens_to_string(callout.contents.clone()),
+            ),
+            Token::Quote(quote) => quote.iter().map(|token| "> ".to_string() + self.token_to_string(token).as_str()).collect(),
+            Token::Frontmatter(_) => panic!("Frontmatter should never be part of a note body."),
+        }
+    }
+
+    fn note_to_string(&self, note: &Note) -> String {
+        // This could probably be done better...
+        let frontmatter = match note.frontmatter.clone() {
+            Yaml::Hash(mut hash) => {
+                // Title
+                hash.insert(
+                    Yaml::String("title".to_string()),
+                    Yaml::String(note.name.clone()),
+                );
+
+                // Tags
+                hash.insert(
+                    Yaml::String("note-tags".to_string()),
+                    Yaml::Array(note.tags.iter().map(|t| Yaml::String(t.clone())).collect()),
+                );
+
+                // Backlinks
+                hash.insert(
+                    Yaml::String("backlinks".to_string()),
+                    Yaml::Array(
+                        note.backlinks
+                            .iter()
+                            .map(|t| Yaml::String(t.clone()))
+                            .collect(),
+                    ),
+                );
+
+                // Links
+                hash.insert(
+                    Yaml::String("links".to_string()),
+                    Yaml::Array(note.links.iter().map(|t| Yaml::String(t.clone())).collect()),
+                );
+
+                Yaml::Hash(hash)
+            }
+            _ => panic!("Frontmatter should always be hash."),
+        };
+
+        let frontmatter_text = {
+            let mut out_str = String::new();
+            yaml_rust::YamlEmitter::new(&mut out_str)
+                .dump(&frontmatter)
+                .unwrap();
+
+            // I do not know why, but a "---" is already added in the beginning of `out_str`
+            format!("{}\n---\n\n", out_str)
+        };
+
+        let body: String = self.tokens_to_string(note.tokens.clone());
+
+        frontmatter_text + body.as_str()
+    }
+
     pub fn output(&self) {
         // Convert Notes
         for note in self.notes.values() {
-            let note_text = note.to_string();
+            let note_text = self.note_to_string(note);
             let out_path = self
                 .hugo_site_path
                 .join(&self.hugo_vault_path)
