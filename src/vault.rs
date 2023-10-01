@@ -33,7 +33,12 @@ fn normalize_string(mut name: String) -> String {
             ' ' => '-',
             _ => c.to_lowercase().next().unwrap(),
         })
-        .collect()
+        .collect::<String>()
+        .split('-')
+        .filter(|part| !part.is_empty())
+        .map(|part| part.to_string())
+        .collect::<Vec<String>>()
+        .join("-")
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -365,7 +370,9 @@ impl Vault {
                 .join(&note.path);
 
             let dir = out_path.parent().unwrap();
-            fs::create_dir_all(dir).unwrap();
+            fs::create_dir_all(normalize_path(&dir.to_path_buf())).unwrap();
+
+            let out_path = normalize_path_to_string(&out_path);
 
             fs::OpenOptions::new()
                 .write(true)
