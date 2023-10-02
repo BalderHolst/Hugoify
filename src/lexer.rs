@@ -253,8 +253,10 @@ impl Lexer {
         let title = if self.peak(-1) != Some('\n') {
             let mut title = self.consume_line();
             match title.last() {
-                Some(Token::Text(t)) if t.ends_with('\n') => { title.pop(); },
-                _ => {},
+                Some(Token::Text(t)) if t.ends_with('\n') => {
+                    title.pop();
+                }
+                _ => {}
             }
             title
         } else {

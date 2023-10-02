@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    ffi::OsStr,
     fs,
     io::{self, Write},
     path::PathBuf,
@@ -9,6 +10,10 @@ use yaml_rust::Yaml;
 
 use crate::lexer::{Lexer, Token};
 
+fn remove_extension(path: &PathBuf) -> PathBuf {
+    path.parent().unwrap().join(path.file_stem().unwrap())
+}
+
 fn normalize_path_to_string(path: &PathBuf) -> String {
     path.components()
         .map(|s| normalize_string(s.as_os_str().to_str().unwrap().to_string()))
@@ -17,8 +22,7 @@ fn normalize_path_to_string(path: &PathBuf) -> String {
 }
 
 fn normalize_path(path: &PathBuf) -> PathBuf {
-    let path = path.parent().unwrap().join(path.file_stem().unwrap());
-    PathBuf::from(normalize_path_to_string(&path))
+    PathBuf::from(normalize_path_to_string(path))
 }
 
 // TODO: Use references
@@ -33,12 +37,20 @@ fn normalize_string(mut name: String) -> String {
             ' ' => '-',
             _ => c.to_lowercase().next().unwrap(),
         })
+        // Remove repeated '-'
         .collect::<String>()
         .split('-')
         .filter(|part| !part.is_empty())
         .map(|part| part.to_string())
         .collect::<Vec<String>>()
         .join("-")
+        // Filter other chars away
+        .chars()
+        .filter(|c| match c {
+            '\'' => false,
+            _ => true,
+        })
+        .collect()
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -61,15 +73,15 @@ impl Note {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vault {
-    // Maps normalized note names to notes
+    /// Maps normalized note names to notes
     notes: HashMap<String, Note>,
-    // Maps normalized attachment names to their relative paths within vault
+    /// Maps normalized attachment names to their relative paths within vault
     attachments: HashMap<String, PathBuf>,
-    // Path to Obidian vault
+    /// Path to Obidian vault
     obsidian_vault_path: PathBuf,
-    // Path to the generated vault relative to `hugo_site_path`
+    /// Path to the generated vault relative to `hugo_site_path`
     hugo_vault_path: PathBuf,
-    // The path to the hugo site on local machine
+    /// The path to the hugo site on local machine
     hugo_site_path: PathBuf,
 }
 
@@ -119,7 +131,12 @@ impl Vault {
     fn add_attachment(&mut self, path: PathBuf) {
         println!("Adding attachment: {:?}", path.display());
         let name = normalize_string(path.file_name().unwrap().to_str().unwrap().to_string());
-        self.attachments.insert(name, path);
+        self.attachments.insert(
+            name,
+            path.strip_prefix(&self.obsidian_vault_path)
+                .unwrap()
+                .to_path_buf(),
+        );
     }
 
     #[cfg(test)]
@@ -131,6 +148,7 @@ impl Vault {
         match path.file_name().map(|n| n.to_str()) {
             Some(Some(".git"))
             | Some(Some(".obsidian"))
+            | Some(Some("Templates"))
             | Some(Some(".trash"))
             | Some(Some("Excalidraw")) => return Ok(()),
             _ => {}
@@ -282,6 +300,7 @@ impl Vault {
             ),
             Token::Link(link) => {
                 let normalized_path = match self.get_note(&normalize_string(link.dest.clone())){
+                    Some(note) if note.path.extension() == Some(OsStr::new("md")) => normalize_path(&remove_extension(&note.path)),
                     Some(note) => normalize_path(&note.path),
 
                     // Remove link if it does not point to anything
@@ -387,10 +406,16 @@ impl Vault {
         // Copy attachments
         for attachment in self.attachments.values() {
             let vault_path = self.obsidian_vault_path.join(attachment);
-            let out_path = self.hugo_vault_path.join(attachment);
+            let out_path = normalize_path(
+                &self
+                    .hugo_site_path
+                    .join(&self.hugo_vault_path)
+                    .join(attachment),
+            );
+            dbg!(&vault_path, &out_path);
             let dir = out_path.parent().unwrap();
             fs::create_dir_all(dir).unwrap();
-            fs::copy(vault_path, out_path).unwrap();
+            // fs::copy(vault_path, out_path).unwrap();
         }
     }
 }
