@@ -34,7 +34,7 @@ fn normalize_path_to_string(path: &PathBuf) -> String {
 }
 
 fn normalize_path(path: &PathBuf) -> PathBuf {
-    PathBuf::from(normalize_path_to_string(path))
+    PathBuf::from(normalize_path_to_string_keep_ext(path))
 }
 
 fn normalize_name(mut name: String) -> String {
@@ -104,6 +104,8 @@ pub struct Vault {
     obsidian_vault_path: PathBuf,
     /// Path to the generated vault relative to `hugo_site_path`
     hugo_vault_path: PathBuf,
+    /// Path to the generated vault for attachments relative to `hugo_site_path`
+    hugo_vault_attachment_path: PathBuf,
     /// The path to the hugo site on local machine
     hugo_site_path: PathBuf,
 }
@@ -233,11 +235,19 @@ impl Vault {
             .unwrap()
             .to_path_buf();
 
+        let hugo_vault_attachment_path = PathBuf::from("static").join(
+            hugo_vault_path
+                .strip_prefix("content")
+                .unwrap()
+                .to_path_buf()
+            );
+
         let vault = Self {
             notes: HashMap::new(),
             attachments: HashMap::new(),
             obsidian_vault_path: path.clone(),
             hugo_vault_path,
+            hugo_vault_attachment_path,
             hugo_site_path,
         };
         Ok(vault)
@@ -312,6 +322,10 @@ impl Vault {
         self.notes.get(normalized_name)
     }
 
+    fn get_attachment(&self, normalized_name: &String) -> Option<&PathBuf> {
+        self.attachments.get(normalized_name)
+    }
+
     fn token_to_string(&self, note: &Note, token: &Token) -> String {
         match token {
             Token::Text(s) => s.clone(),
@@ -322,14 +336,24 @@ impl Vault {
                 self.tokens_to_string(note, title.clone()),
             ),
             Token::Link(link) => {
-                let normalized_path = match self.get_note(&normalize_name(link.dest.clone())){
-                    Some(note) if note.path.extension() == Some(OsStr::new("md")) => normalize_path(&remove_extension(&note.path)),
-                    Some(note) => normalize_path(&note.path),
+                let normalized_name = normalize_name(link.dest.clone());
+                let normalized_path = match self.get_note(&normalized_name){
+                    Some(note) if note.path.extension() == Some(OsStr::new("md")) => normalize_path_to_string(&remove_extension(&note.path)),
+                    Some(note) => normalize_path_to_string(&note.path),
 
-                    // Remove link if it does not point to anything
-                    None => return link.show_how.clone(),
+                    // If link does not point to a note
+                    None => {
+                        match self.get_attachment(&normalized_name) {
+                            // Found attachment!
+                            Some(p) => normalize_path_to_string_keep_ext(p),
+
+                            // Remove link if it does not point to anything
+                            None => link.show_how.clone()
+                        }
+
+                    },
                 };
-                let url = "../".repeat(note.path_debth()) + normalized_path.to_str().unwrap();
+                let url = "../".repeat(note.path_debth()) + normalized_path.as_str();
                 match (link.render, &link.position) {
                     (true, None) => format!("![{}]({})", link.show_how, url),
                     (false, None) => format!("[{}]({})", link.show_how, url),
@@ -448,7 +472,7 @@ impl Vault {
             let out_path = normalize_path(
                 &self
                     .hugo_site_path
-                    .join(&self.hugo_vault_path)
+                    .join(&self.hugo_vault_attachment_path)
                     .join(attachment),
             );
             let dir = out_path.parent().unwrap();
