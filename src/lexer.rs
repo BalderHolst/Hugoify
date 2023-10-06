@@ -249,18 +249,23 @@ impl Lexer {
         }
         self.consume_whitespace();
 
-        // If the callout does not have a title
         let title = if self.peak(-1) != Some('\n') {
             let mut title = self.consume_line();
             match title.last() {
                 Some(Token::Text(t)) if t.ends_with('\n') => {
+                    let mut t = t.clone();
+                    t.pop();
                     title.pop();
+                    title.push(Token::Text(t))
                 }
                 _ => {}
             }
             title
         } else {
-            vec![Token::Text("".to_string())]
+            // If the callout does not have a title
+            let mut name = kind.clone();
+            name = name[0..1].to_uppercase() + &name[1..];
+            vec![Token::Text(name)]
         };
 
         let contents = self.consume_quote();
