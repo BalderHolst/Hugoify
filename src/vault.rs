@@ -453,7 +453,7 @@ impl Vault {
             );
             let dir = out_path.parent().unwrap();
             fs::create_dir_all(dir).unwrap();
-            // fs::copy(vault_path, out_path).unwrap();
+            fs::copy(vault_path, out_path).unwrap();
         }
     }
 }
