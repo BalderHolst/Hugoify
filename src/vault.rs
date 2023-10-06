@@ -82,6 +82,12 @@ impl Note {
     pub fn path_debth(&self) -> usize {
         self.path.components().count()
     }
+
+    fn add_backlink(&mut self, backlink: String) {
+        if !self.backlinks.contains(&backlink) {
+            self.backlinks.push(backlink);
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -278,8 +284,7 @@ impl Vault {
                             .join(&note.path.parent().unwrap())
                             .join(&note.path.file_stem().unwrap());
                         to_note
-                            .backlinks
-                            .push("/".to_string() + &normalize_path_to_string(&hugo_site_path));
+                            .add_backlink("/".to_string() + &normalize_path_to_string(&hugo_site_path));
                         self.notes.insert(to_note_name, to_note);
                     }
                 }
