@@ -14,6 +14,17 @@ fn remove_extension(path: &PathBuf) -> PathBuf {
     path.parent().unwrap().join(path.file_stem().unwrap())
 }
 
+fn normalize_path_to_string_keep_ext(path: &PathBuf) -> String {
+    let extension = path.extension();
+    let mut path = path.clone();
+    path.set_extension("");
+    let path = normalize_path_to_string(&path);
+    match extension {
+        Some(ext) => path + "." + ext.to_str().unwrap(),
+        None => path,
+    }
+}
+
 fn normalize_path_to_string(path: &PathBuf) -> String {
     path.components()
         .map(|s| normalize_string(s.as_os_str().to_str().unwrap().to_string()))
@@ -44,10 +55,12 @@ fn normalize_string(mut name: String) -> String {
         .map(|part| part.to_string())
         .collect::<Vec<String>>()
         .join("-")
-        // Filter other chars away
+
+        // Filter other chars away in name
         .chars()
         .filter(|c| match c {
             '\'' => false,
+            '.' => false,
             _ => true,
         })
         .collect()
@@ -391,7 +404,7 @@ impl Vault {
             let dir = out_path.parent().unwrap();
             fs::create_dir_all(normalize_path(&dir.to_path_buf())).unwrap();
 
-            let out_path = normalize_path_to_string(&out_path);
+            let out_path = normalize_path_to_string_keep_ext(&out_path);
 
             fs::OpenOptions::new()
                 .write(true)
