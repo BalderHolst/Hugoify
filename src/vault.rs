@@ -360,7 +360,7 @@ impl Vault {
 
                 // Tags
                 hash.insert(
-                    Yaml::String("note-tags".to_string()),
+                    Yaml::String("note_tags".to_string()),
                     Yaml::Array(note.tags.iter().map(|t| Yaml::String(t.clone())).collect()),
                 );
 
