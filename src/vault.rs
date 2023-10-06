@@ -26,7 +26,8 @@ fn normalize_path_to_string_keep_ext(path: &PathBuf) -> String {
 }
 
 fn normalize_path_to_string(path: &PathBuf) -> String {
-    path.components()
+    let components = path.components();
+    components
         .map(|s| normalize_string(s.as_os_str().to_str().unwrap().to_string()))
         .collect::<Vec<String>>()
         .join("/")
@@ -36,13 +37,16 @@ fn normalize_path(path: &PathBuf) -> PathBuf {
     PathBuf::from(normalize_path_to_string(path))
 }
 
-// TODO: Use references
-fn normalize_string(mut name: String) -> String {
+fn normalize_name(mut name: String) -> String {
     if name.contains('/') {
-        eprint!("WARNING: Normalizing name with '/': `{name}`. Only using filename.");
+        eprintln!("WARNING: Normalizing name with '/': `{name}`. Only using filename.");
         name = name.split_once('/').unwrap().1.to_string();
     }
+    return normalize_string(name)
+}
 
+// TODO: Use references
+fn normalize_string(name: String) -> String {
     name.chars()
         .map(|c| match c {
             ' ' => '-',
@@ -143,13 +147,13 @@ impl Vault {
             tags: Vec::new(),
             backlinks: Vec::new(),
         };
-        let normalized_name = normalize_string(name.to_string());
+        let normalized_name = normalize_name(name.to_string());
         self.notes.insert(normalized_name, note);
     }
 
     fn add_attachment(&mut self, path: PathBuf) {
         println!("Adding attachment: {:?}", path.display());
-        let name = normalize_string(path.file_name().unwrap().to_str().unwrap().to_string());
+        let name = normalize_name(path.file_name().unwrap().to_str().unwrap().to_string());
         self.attachments.insert(
             name,
             path.strip_prefix(&self.obsidian_vault_path)
@@ -257,7 +261,7 @@ impl Vault {
                             continue;
                         }
 
-                        let to_note_name = normalize_string(link.dest.clone());
+                        let to_note_name = normalize_name(link.dest.clone());
                         let mut to_note = match self.notes.get(&to_note_name) {
                             Some(n) => n.clone(),
                             None => {
@@ -317,7 +321,7 @@ impl Vault {
                 self.tokens_to_string(note, title.clone()),
             ),
             Token::Link(link) => {
-                let normalized_path = match self.get_note(&normalize_string(link.dest.clone())){
+                let normalized_path = match self.get_note(&normalize_name(link.dest.clone())){
                     Some(note) if note.path.extension() == Some(OsStr::new("md")) => normalize_path(&remove_extension(&note.path)),
                     Some(note) => normalize_path(&note.path),
 
@@ -430,7 +434,6 @@ impl Vault {
                     .join(&self.hugo_vault_path)
                     .join(attachment),
             );
-            dbg!(&vault_path, &out_path);
             let dir = out_path.parent().unwrap();
             fs::create_dir_all(dir).unwrap();
             // fs::copy(vault_path, out_path).unwrap();
