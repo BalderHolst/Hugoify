@@ -241,6 +241,7 @@ impl Lexer {
             let c = self.consume().unwrap();
             kind.push(c);
         }
+        kind = kind.to_lowercase();
         assert_eq!(self.consume(), Some(']'));
         let mut foldable = false;
         if self.current() == Some('-') {
