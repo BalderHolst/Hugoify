@@ -248,11 +248,12 @@ impl Vault {
             let mut note = self.notes.get(&note_name.clone()).unwrap().clone();
             for token in note.tokens.clone() {
                 match token {
-                    Token::Text(_) => {}
-                    Token::Header(_, _) => {}
-                    Token::Callout(_) => {}
-                    Token::Quote(_) => {}
-                    Token::Frontmatter(_) => {}
+                    Token::Text(_) => {},
+                    Token::Header(_, _) => {},
+                    Token::Callout(_) => {},
+                    Token::Quote(_) => {},
+                    Token::Frontmatter(_) => {},
+                    Token::Divider => {},
                     Token::Tag(tag) => note.tags.push(tag.to_string()),
                     Token::Link(link) => {
                         // if `dest` field is emply, the link points to itself and we don't have to
@@ -345,6 +346,7 @@ impl Vault {
             ),
             Token::Quote(quote) => quote.iter().map(|token| "> ".to_string() + self.token_to_string(note, token).as_str()).collect(),
             Token::Frontmatter(_) => panic!("Frontmatter should never be part of a note body."),
+            Token::Divider => "---\n".to_string(),
         }
     }
 
@@ -395,8 +397,23 @@ impl Vault {
             // I do not know why, but a "---" is already added in the beginning of `out_str`
             format!("{}\n---\n\n", out_str)
         };
+        
+        let mut tokens = note.tokens.clone();
 
-        let body: String = self.tokens_to_string(note, note.tokens.clone());
+        for (tags_begin_offset, rtoken) in tokens.clone().iter().rev().enumerate() {
+            match rtoken {
+                Token::Divider => {
+                    let (slice, _) = tokens.as_slice().split_at(tokens.len() - tags_begin_offset - 1);
+                    tokens = Vec::from(slice);
+                },
+                Token::Tag(_) => {},
+                t => if !t.is_whitespace() {
+                    break;
+                }
+            }
+        }
+
+        let body: String = self.tokens_to_string(note, tokens);
 
         frontmatter_text + body.as_str()
     }

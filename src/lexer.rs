@@ -36,6 +36,29 @@ pub enum Token {
     Callout(Callout),
     Quote(Vec<Token>),
     Frontmatter(Yaml), // This can only appear as the first token
+    Divider,
+}
+
+impl Token {
+    pub fn is_whitespace(&self) -> bool {
+        match self {
+            Token::Text(t) => {
+                for c in t.chars() {
+                    if !c.is_whitespace() {
+                        return false;
+                    }
+                }
+                true
+            },
+            Token::Tag(_) => false,
+            Token::Header(_, _) => false,
+            Token::Link(_) => false,
+            Token::Callout(_) => false,
+            Token::Quote(_) => false,
+            Token::Frontmatter(_) => false,
+            Token::Divider => false,
+        }
+    }
 }
 
 pub struct Lexer {
@@ -322,6 +345,21 @@ impl Lexer {
 
         Ok(Token::Frontmatter(frontmatter))
     }
+
+    fn consume_divider(&mut self) -> Token {
+        assert_eq!(self.consume(), Some('-'));
+        assert_eq!(self.consume(), Some('-'));
+        assert_eq!(self.consume(), Some('-'));
+        while self.current() == Some('-') {
+            self.consume();
+        }
+        while self.current() == Some(' ') {
+            self.consume();
+        }
+        assert_eq!(self.consume(), Some('\n'));
+        Token::Divider
+    }
+
 }
 
 impl Iterator for Lexer {
@@ -354,6 +392,9 @@ impl Iterator for Lexer {
                         Some(Token::Text("".to_string()))
                     }
                 }
+            }
+            '-' if (self.peak(1), self.peak(2)) == (Some('-'), Some('-')) => {
+                Some(self.consume_divider())
             }
             c if c.is_whitespace() => Some(Token::Text(self.consume_whitespace())),
             _ => {
