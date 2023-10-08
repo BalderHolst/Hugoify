@@ -3,6 +3,7 @@ use std::{path::PathBuf, process::exit};
 mod cli;
 mod lexer;
 mod vault;
+mod latex;
 
 use clap::Parser;
 use cli::Args;
