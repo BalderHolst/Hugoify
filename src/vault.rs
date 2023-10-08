@@ -258,12 +258,14 @@ impl Vault {
             let mut note = self.notes.get(&note_name.clone()).unwrap().clone();
             for token in note.tokens.clone() {
                 match token {
-                    Token::Text(_) => {}
-                    Token::Header(_, _) => {}
-                    Token::Callout(_) => {}
-                    Token::Quote(_) => {}
-                    Token::Frontmatter(_) => {}
-                    Token::Divider => {}
+                    Token::Text(_) => {},
+                    Token::Header(_, _) => {},
+                    Token::Callout(_) => {},
+                    Token::Quote(_) => {},
+                    Token::Frontmatter(_) => {},
+                    Token::Divider => {},
+                    Token::InlineMath(_) => {},
+                    Token::DisplayMath(_) => {},
                     Token::Tag(tag) => note.tags.push(tag.to_string()),
                     Token::Link(link) => {
                         // if `dest` field is emply, the link points to itself and we don't have to
@@ -302,7 +304,7 @@ impl Vault {
                             "/".to_string() + &normalize_path_to_string(&hugo_site_path),
                         );
                         self.notes.insert(to_note_name, to_note);
-                    }
+                    },
                 }
                 self.notes.insert(note_name.clone(), note.clone());
             }
@@ -396,6 +398,8 @@ impl Vault {
             Token::Quote(quote) => quote.iter().map(|token| "> ".to_string() + self.token_to_string(note, token).as_str()).collect(),
             Token::Frontmatter(_) => panic!("Frontmatter should never be part of a note body."),
             Token::Divider => "---\n".to_string(),
+            Token::InlineMath(math) => format!("${math}$"),
+            Token::DisplayMath(math) => format!("$${math}$$"),
         }
     }
 

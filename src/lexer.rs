@@ -45,6 +45,8 @@ pub enum Token {
     Callout(Callout),
     Quote(Vec<Token>),
     Frontmatter(Yaml), // This can only appear as the first token
+    InlineMath(String),
+    DisplayMath(String),
     Divider,
 }
 
@@ -66,6 +68,8 @@ impl Token {
             Token::Quote(_) => false,
             Token::Frontmatter(_) => false,
             Token::Divider => false,
+            Token::InlineMath(_) => false,
+            Token::DisplayMath(_) => false,
         }
     }
 }
@@ -202,6 +206,16 @@ impl Lexer {
                     s.clear();
                     tokens.push(self.consume_link());
                 }
+                (Some('$'), Some('$'), _) => {
+                    tokens.push(Token::Text(s.clone()));
+                    s.clear();
+                    tokens.push(self.consume_display_math());
+                }
+                (Some('$'), _, _) => {
+                    tokens.push(Token::Text(s.clone()));
+                    s.clear();
+                    tokens.push(self.consume_inline_math());
+                }
                 (Some(c), _, _) => {
                     self.consume();
                     s.push(c);
@@ -245,7 +259,7 @@ impl Lexer {
         Token::Tag(text)
     }
 
-    // blocks of text beginning with '>'
+    // blocks of text beginning with '>'. Either Callout or quote.
     fn consume_block(&mut self) -> Token {
         // Find the starting character to determine if block is a callout
         assert_eq!(self.peak(0), Some('>'));
@@ -370,6 +384,39 @@ impl Lexer {
         debug_assert!(matches!(self.consume(), Some('\n') | None));
         Token::Divider
     }
+
+    fn consume_display_math(&mut self) -> Token {
+        assert_eq!(self.consume(), Some('$'));
+        assert_eq!(self.consume(), Some('$'));
+
+        let start = self.cursor.clone();
+        while !matches!(
+            (self.current(), self.peak(1)),
+            (Some('$'), Some('$')) | (None, _) | (_, None)
+        ) {
+            self.consume();
+        }
+
+        let inline_math = self.text[start..self.cursor].iter().collect();
+
+        assert_eq!(self.consume(), Some('$'));
+        assert_eq!(self.consume(), Some('$'));
+        Token::DisplayMath(inline_math)
+    }
+
+    fn consume_inline_math(&mut self) -> Token {
+        assert_eq!(self.consume(), Some('$'));
+
+        let start = self.cursor.clone();
+        while !matches!(self.current(), Some('$') | None) {
+            self.consume();
+        }
+
+        let inline_math = self.text[start..self.cursor].iter().collect();
+
+        assert_eq!(self.consume(), Some('$'));
+        Token::InlineMath(inline_math)
+    }
 }
 
 impl Iterator for Lexer {
@@ -406,6 +453,8 @@ impl Iterator for Lexer {
             '-' if (self.peak(1), self.peak(2)) == (Some('-'), Some('-')) => {
                 Some(self.consume_divider())
             }
+            '$' if self.peak(1) == Some('$') => Some(self.consume_display_math()),
+            '$' => Some(self.consume_inline_math()),
             c if c.is_whitespace() => Some(Token::Text(self.consume_whitespace())),
             _ => {
                 for token in self.consume_line() {
