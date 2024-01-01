@@ -452,8 +452,17 @@ impl Vault {
                 .join(&self.hugo_vault_path)
                 .join(&note.path);
 
-            let dir = out_path.parent().unwrap();
-            fs::create_dir_all(normalize_path(&dir.to_path_buf())).unwrap();
+            let out_dir = out_path.parent().unwrap();
+
+            // TODO: this does not work with paths with `.`
+            if let Err(e) = fs::create_dir_all(normalize_path(&out_dir.to_path_buf())) {
+                eprint!(
+                    "Could not create output directory `{}`: {}",
+                    out_dir.display(),
+                    e
+                );
+                std::process::exit(1)
+            }
 
             let out_path = normalize_path_to_string_keep_ext(&out_path);
 
