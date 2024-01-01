@@ -355,10 +355,10 @@ impl Vault {
 
                             // Remove link if it does not point to anything
                             None => {
-                                let s = link.show_how.clone();
+                                let s = link.label();
                                 // TODO: specify from where in error
                                 eprintln!("WARNING: Removing link to '{s}'.");
-                                return s;
+                                return s.to_owned();
                             }
                         }
 
@@ -367,19 +367,20 @@ impl Vault {
                 let url = "../".repeat(note.path_debth()) + normalized_path.as_str();
                 let vault_url = "notes/vault/".to_string() + normalized_path.as_str();
                 match (is_attachment, link.render, &link.position) {
-                    (_, true, None) => format!("![{}]({})", link.show_how, url),
-                    (_, false, None) => format!("[{}]({})", link.show_how, url),
-                    (_, true, Some(position))  => format!("![{}#{}]({})", link.show_how, position, url),
-                    (false, false, Some(position)) => format!(
+                    (_, true, None) => format!("![{}]({})", link.label(), url),
+                    (_, false, None) => format!("[{}]({})", link.label(), url),
+                    // TODO: actually embed things idk
+                    (_, true, Some(position))  => format!("![{}#{}]({})", link.label(), position, url),
+                    (false, false, Some(_position)) => format!(
                         // TODO: Jump to heading (position) when link is clicked
-                        "[{}>{}]({{{{< ref \"{}\" >}}}})",
-                        link.show_how,
-                        position,
-                        vault_url
+                        "[{show_how}]({{{{< ref \"{url}\" >}}}})",
+                        show_how=link.label(),
+                        url=vault_url
+                        //pos=position,
                         ),
                     (true, false, Some(position)) => format!(
-                        "[{show_how}>{pos}]({url}#{pos})",
-                        show_how=link.show_how,
+                        "[{show_how}]({url}#{pos})",
+                        show_how=link.label(),
                         pos=position,
                         url=url
                         ),

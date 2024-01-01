@@ -13,9 +13,18 @@ pub enum LexerError {
 pub struct Link {
     pub dest: String,
     pub position: Option<String>,
-    pub show_how: String,
+    pub show_how: Option<String>,
     pub options: Option<String>,
     pub render: bool,
+}
+
+impl Link {
+    pub fn label(&self) -> &str {
+        match &self.show_how {
+            Some(s) => s.as_str(),
+            None => self.dest.as_str(),
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -154,21 +163,21 @@ impl Lexer {
             1 => Token::Link(Link {
                 dest: note_name.clone(),
                 position,
-                show_how: note_name,
+                show_how: None,
                 options: None,
                 render: shown,
             }),
             2 => Token::Link(Link {
                 dest: note_name,
                 position,
-                show_how: fields[1].clone(),
+                show_how: Some(fields[1].clone()),
                 options: None,
                 render: shown,
             }),
             3 => Token::Link(Link {
                 dest: note_name,
                 position,
-                show_how: fields[2].clone(),
+                show_how: Some(fields[2].clone()),
                 options: Some(fields[1].clone()),
                 render: shown,
             }),
