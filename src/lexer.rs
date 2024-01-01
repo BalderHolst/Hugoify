@@ -141,30 +141,32 @@ impl Lexer {
         // TODO: Give good error message
         assert_eq!(self.consume(), Some(']'));
 
-        let dest = fields[0].clone();
-        let (dest, position) = match dest.split_once('#') {
+        let note_name = fields[0].clone();
+        let (note_name, position) = match note_name.split_once('#') {
             Some((d, p)) => (d.to_string(), Some(p.to_string())),
-            None => (dest, None),
+            None => (note_name, None),
         };
 
+        debug_assert!(!note_name.contains("#"));
+
         match fields.len() {
-            0 => panic!("Emply link."),
+            0 => todo!("Emply link."),
             1 => Token::Link(Link {
-                dest,
+                dest: note_name.clone(),
                 position,
-                show_how: fields[0].clone(),
+                show_how: note_name,
                 options: None,
                 render: shown,
             }),
             2 => Token::Link(Link {
-                dest,
+                dest: note_name,
                 position,
                 show_how: fields[1].clone(),
                 options: None,
                 render: shown,
             }),
             3 => Token::Link(Link {
-                dest,
+                dest: note_name,
                 position,
                 show_how: fields[2].clone(),
                 options: Some(fields[1].clone()),
@@ -347,16 +349,16 @@ impl Lexer {
     }
 
     fn consume_divider(&mut self) -> Token {
-        assert_eq!(self.consume(), Some('-'));
-        assert_eq!(self.consume(), Some('-'));
-        assert_eq!(self.consume(), Some('-'));
+        debug_assert_eq!(self.consume(), Some('-'));
+        debug_assert_eq!(self.consume(), Some('-'));
+        debug_assert_eq!(self.consume(), Some('-'));
         while self.current() == Some('-') {
             self.consume();
         }
         while self.current() == Some(' ') {
             self.consume();
         }
-        assert_eq!(self.consume(), Some('\n'));
+        debug_assert!(matches!(self.consume(), Some('\n') | None));
         Token::Divider
     }
 
