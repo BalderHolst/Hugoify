@@ -14,5 +14,4 @@ pub struct Args {
 
     #[arg(short('H'), long)]
     pub hugo_root: Option<String>,
-    
 }

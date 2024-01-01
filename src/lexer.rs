@@ -49,7 +49,7 @@ impl Token {
                     }
                 }
                 true
-            },
+            }
             Token::Tag(_) => false,
             Token::Header(_, _) => false,
             Token::Link(_) => false,
@@ -361,7 +361,6 @@ impl Lexer {
         debug_assert!(matches!(self.consume(), Some('\n') | None));
         Token::Divider
     }
-
 }
 
 impl Iterator for Lexer {

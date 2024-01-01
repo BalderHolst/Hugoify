@@ -42,7 +42,7 @@ fn normalize_name(mut name: String) -> String {
         eprintln!("WARNING: Normalizing name with '/': `{name}`. Only using filename.");
         name = name.split_once('/').unwrap().1.to_string();
     }
-    return normalize_string(name)
+    return normalize_string(name);
 }
 
 // TODO: Use references
@@ -59,7 +59,6 @@ fn normalize_string(name: String) -> String {
         .map(|part| part.to_string())
         .collect::<Vec<String>>()
         .join("-")
-
         // Filter other chars away in name
         .chars()
         .filter(|c| match c {
@@ -240,8 +239,8 @@ impl Vault {
             hugo_vault_path
                 .strip_prefix("content")
                 .unwrap()
-                .to_path_buf()
-            );
+                .to_path_buf(),
+        );
 
         let vault = Self {
             notes: HashMap::new(),
@@ -259,12 +258,12 @@ impl Vault {
             let mut note = self.notes.get(&note_name.clone()).unwrap().clone();
             for token in note.tokens.clone() {
                 match token {
-                    Token::Text(_) => {},
-                    Token::Header(_, _) => {},
-                    Token::Callout(_) => {},
-                    Token::Quote(_) => {},
-                    Token::Frontmatter(_) => {},
-                    Token::Divider => {},
+                    Token::Text(_) => {}
+                    Token::Header(_, _) => {}
+                    Token::Callout(_) => {}
+                    Token::Quote(_) => {}
+                    Token::Frontmatter(_) => {}
+                    Token::Divider => {}
                     Token::Tag(tag) => note.tags.push(tag.to_string()),
                     Token::Link(link) => {
                         // if `dest` field is emply, the link points to itself and we don't have to
@@ -299,8 +298,9 @@ impl Vault {
                             .unwrap()
                             .join(&note.path.parent().unwrap())
                             .join(&note.path.file_stem().unwrap());
-                        to_note
-                            .add_backlink("/".to_string() + &normalize_path_to_string(&hugo_site_path));
+                        to_note.add_backlink(
+                            "/".to_string() + &normalize_path_to_string(&hugo_site_path),
+                        );
                         self.notes.insert(to_note_name, to_note);
                     }
                 }
@@ -328,6 +328,8 @@ impl Vault {
     }
 
     fn token_to_string(&self, note: &Note, token: &Token) -> String {
+        let mut is_attachment = false;
+
         match token {
             Token::Text(s) => s.clone(),
             Token::Tag(s) => format!("#{s}"),
@@ -346,20 +348,41 @@ impl Vault {
                     None => {
                         match self.get_attachment(&normalized_name) {
                             // Found attachment!
-                            Some(p) => normalize_path_to_string_keep_ext(p),
+                            Some(p) => {
+                                is_attachment = true;
+                                normalize_path_to_string_keep_ext(p)
+                            },
 
                             // Remove link if it does not point to anything
-                            None => link.show_how.clone()
+                            None => {
+                                let s = link.show_how.clone();
+                                // TODO: specify from where in error
+                                eprintln!("WARNING: Removing link to '{s}'.");
+                                return s;
+                            }
                         }
 
                     },
                 };
                 let url = "../".repeat(note.path_debth()) + normalized_path.as_str();
-                match (link.render, &link.position) {
-                    (true, None) => format!("![{}]({})", link.show_how, url),
-                    (false, None) => format!("[{}]({})", link.show_how, url),
-                    (true, Some(position))  => format!("![{}#{}]({})", link.show_how, position, url),
-                    (false, Some(position)) => format!("[{}#{}]({})", link.show_how, position, url),
+                let vault_url = "notes/vault/".to_string() + normalized_path.as_str();
+                match (is_attachment, link.render, &link.position) {
+                    (_, true, None) => format!("![{}]({})", link.show_how, url),
+                    (_, false, None) => format!("[{}]({})", link.show_how, url),
+                    (_, true, Some(position))  => format!("![{}#{}]({})", link.show_how, position, url),
+                    (false, false, Some(position)) => format!(
+                        // TODO: Jump to heading (position) when link is clicked
+                        "[{}>{}]({{{{< ref \"{}\" >}}}})",
+                        link.show_how,
+                        position,
+                        vault_url
+                        ),
+                    (true, false, Some(position)) => format!(
+                        "[{show_how}>{pos}]({url}#{pos})",
+                        show_how=link.show_how,
+                        pos=position,
+                        url=url
+                        ),
                 }
             },
             Token::Callout(callout) => format!(
@@ -422,18 +445,22 @@ impl Vault {
             // I do not know why, but a "---" is already added in the beginning of `out_str`
             format!("{}\n---\n\n", out_str)
         };
-        
+
         let mut tokens = note.tokens.clone();
 
         for (tags_begin_offset, rtoken) in tokens.clone().iter().rev().enumerate() {
             match rtoken {
                 Token::Divider => {
-                    let (slice, _) = tokens.as_slice().split_at(tokens.len() - tags_begin_offset - 1);
+                    let (slice, _) = tokens
+                        .as_slice()
+                        .split_at(tokens.len() - tags_begin_offset - 1);
                     tokens = Vec::from(slice);
-                },
-                Token::Tag(_) => {},
-                t => if !t.is_whitespace() {
-                    break;
+                }
+                Token::Tag(_) => {}
+                t => {
+                    if !t.is_whitespace() {
+                        break;
+                    }
                 }
             }
         }
