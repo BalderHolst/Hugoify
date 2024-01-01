@@ -174,6 +174,7 @@ impl Vault {
             Some(Some(".git"))
             | Some(Some(".obsidian"))
             | Some(Some("Templates"))
+            | Some(Some("External"))
             | Some(Some(".trash"))
             | Some(Some("Excalidraw")) => return Ok(()),
             _ => {}
