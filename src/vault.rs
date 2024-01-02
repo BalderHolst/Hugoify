@@ -6,6 +6,7 @@ use std::{
     path::PathBuf,
 };
 
+
 use yaml_rust::Yaml;
 
 use crate::{lexer::{Lexer, Token}, latex};
@@ -397,15 +398,9 @@ impl Vault {
             ),
             Token::Quote(quote) => quote.iter().map(|token| "> ".to_string() + self.token_to_string(note, token).as_str()).collect(),
             Token::Frontmatter(_) => panic!("Frontmatter should never be part of a note body."),
-            Token::Divider => "---\n".to_string(),
-            Token::InlineMath(math) => format!("{{{{% rawhtml %}}}} {} {{{{% /rawhtml %}}}}", match latex::render_inline_latex(math.as_str()) {
-                Ok(s) => s,
-                Err(_) => math.to_owned()
-            }),
-            Token::DisplayMath(math) => format!("{{{{% rawhtml %}}}} {} {{{{% /rawhtml %}}}}", match latex::render_display_latex(math.as_str()) {
-                Ok(s) => s,
-                Err(_) => math.to_owned(),
-            }),
+            Token::Divider => "\n--------------------\n".to_string(),
+            Token::InlineMath(math) => format!("${}$", latex::process_latex(math.to_string())),
+            Token::DisplayMath(math) => format!("$$\n{}\n$$", latex::process_latex(math.to_string())),
         }
     }
 
