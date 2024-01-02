@@ -13,6 +13,9 @@ pub struct ExternalLink {
     pub url: String,
     show_how: String,
     pub render: bool,
+    // TODO:
+    // pub options: Option<String>,
+    // pub position: Option<String>,
 }
 
 impl ExternalLink {
@@ -38,7 +41,7 @@ pub struct InternalLink {
 impl InternalLink {
     pub fn label(&self) -> String {
         let l = match &self.show_how {
-            Some(s) => s.as_str(),
+            Some(s) => return s.to_owned(),
             None => self.dest.as_str(),
         }.to_string();
         match &self.position {

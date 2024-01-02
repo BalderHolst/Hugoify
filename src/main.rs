@@ -4,6 +4,7 @@ mod cli;
 mod lexer;
 mod vault;
 mod latex;
+mod external_links;
 
 use clap::Parser;
 use cli::Args;

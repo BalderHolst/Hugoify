@@ -9,7 +9,7 @@ use std::{
 
 use yaml_rust::Yaml;
 
-use crate::{lexer::{Lexer, Token, ExternalLink}, latex};
+use crate::{lexer::{Lexer, Token, ExternalLink}, latex, external_links};
 
 fn remove_extension(path: &PathBuf) -> PathBuf {
     path.parent().unwrap().join(path.file_stem().unwrap())
@@ -342,12 +342,7 @@ impl Vault {
                 "#".repeat(*level),
                 self.tokens_to_string(note, title.clone()),
             ),
-            Token::ExternalLink(link) => {
-                match link {
-                    ExternalLink { render: true, url, .. } => format!("![{}]({})", link.label(), url),
-                    ExternalLink { render: false, url, .. } => format!("[{}]({})", link.label(), url),
-                }
-            }
+            Token::ExternalLink(link) => external_links::format_external_link(link),
             Token::InternalLink(link) => {
                 let normalized_name = normalize_name(link.dest.clone());
                 let normalized_path = match self.get_note(&normalized_name){
