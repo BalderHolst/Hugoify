@@ -9,7 +9,7 @@ use std::{
 
 use yaml_rust::Yaml;
 
-use crate::{lexer::{Lexer, Token}, latex};
+use crate::{lexer::{Lexer, Token, ExternalLink}, latex};
 
 fn remove_extension(path: &PathBuf) -> PathBuf {
     path.parent().unwrap().join(path.file_stem().unwrap())
@@ -268,7 +268,8 @@ impl Vault {
                     Token::InlineMath(_) => {},
                     Token::DisplayMath(_) => {},
                     Token::Tag(tag) => note.tags.push(tag.to_string()),
-                    Token::Link(link) => {
+                    Token::ExternalLink(_) => {},
+                    Token::InternalLink(link) => {
                         // if `dest` field is emply, the link points to itself and we don't have to
                         // do anything in that case.
                         if link.dest.is_empty() {
@@ -341,7 +342,13 @@ impl Vault {
                 "#".repeat(*level),
                 self.tokens_to_string(note, title.clone()),
             ),
-            Token::Link(link) => {
+            Token::ExternalLink(link) => {
+                match link {
+                    ExternalLink { render: true, url, .. } => format!("![{}]({})", link.label(), url),
+                    ExternalLink { render: false, url, .. } => format!("[{}]({})", link.label(), url),
+                }
+            }
+            Token::InternalLink(link) => {
                 let normalized_name = normalize_name(link.dest.clone());
                 let normalized_path = match self.get_note(&normalized_name){
                     Some(note) if note.path.extension() == Some(OsStr::new("md")) => normalize_path_to_string(&remove_extension(&note.path)),
@@ -400,7 +407,7 @@ impl Vault {
             Token::Frontmatter(_) => panic!("Frontmatter should never be part of a note body."),
             Token::Divider => "\n--------------------\n".to_string(),
             Token::InlineMath(math) => format!("${}$", latex::process_latex(math.to_string())),
-            Token::DisplayMath(math) => format!("$$\n{}\n$$", latex::process_latex(math.to_string())),
+            Token::DisplayMath(math) => format!("$${}$$", latex::process_latex(math.to_string())),
         }
     }
 

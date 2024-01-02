@@ -8,9 +8,26 @@ pub enum LexerError {
     Utf(std::string::FromUtf8Error),
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
-pub struct Link {
+pub struct ExternalLink {
+    pub url: String,
+    show_how: String,
+    pub render: bool,
+}
+
+impl ExternalLink {
+    pub fn label(&self) -> &str {
+        if self.show_how.is_empty() {
+            self.url.as_str()
+        }
+        else {
+            self.show_how.as_str()
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct InternalLink {
     pub dest: String,
     pub position: Option<String>,
     pub show_how: Option<String>,
@@ -18,7 +35,7 @@ pub struct Link {
     pub render: bool,
 }
 
-impl Link {
+impl InternalLink {
     pub fn label(&self) -> &str {
         match &self.show_how {
             Some(s) => s.as_str(),
@@ -41,7 +58,8 @@ pub enum Token {
     Text(String),
     Tag(String),
     Header(usize, Vec<Token>),
-    Link(Link),
+    InternalLink(InternalLink),
+    ExternalLink(ExternalLink),
     Callout(Callout),
     Quote(Vec<Token>),
     Frontmatter(Yaml), // This can only appear as the first token
@@ -63,7 +81,8 @@ impl Token {
             }
             Token::Tag(_) => false,
             Token::Header(_, _) => false,
-            Token::Link(_) => false,
+            Token::InternalLink(_) => false,
+            Token::ExternalLink(_) => false,
             Token::Callout(_) => false,
             Token::Quote(_) => false,
             Token::Frontmatter(_) => false,
@@ -109,6 +128,13 @@ impl Lexer {
         self.peak(-1)
     }
 
+    fn consume_expect(&mut self, expected: char) {
+        let c = self.consume();
+        if Some(expected) != c {
+            panic!("Found unexpected char: '{}'", expected); // TODO: return error
+        }
+    }
+
     fn current(&self) -> Option<char> {
         self.peak(0)
     }
@@ -125,7 +151,7 @@ impl Lexer {
         s
     }
 
-    fn consume_link(&mut self) -> Token {
+    fn consume_internal_link(&mut self) -> Token {
         let mut fields = vec![String::new()];
         let mut shown = false;
 
@@ -164,21 +190,21 @@ impl Lexer {
 
         match fields.len() {
             0 => todo!("Emply link."),
-            1 => Token::Link(Link {
+            1 => Token::InternalLink(InternalLink {
                 dest: note_name.clone(),
                 position,
                 show_how: None,
                 options: None,
                 render: shown,
             }),
-            2 => Token::Link(Link {
+            2 => Token::InternalLink(InternalLink {
                 dest: note_name,
                 position,
                 show_how: Some(fields[1].clone()),
                 options: None,
                 render: shown,
             }),
-            3 => Token::Link(Link {
+            3 => Token::InternalLink(InternalLink {
                 dest: note_name,
                 position,
                 show_how: Some(fields[2].clone()),
@@ -187,6 +213,61 @@ impl Lexer {
             }),
             n => panic!("Invalid amount of fields in link: `{n}`."),
         }
+    }
+
+    fn consume_external_link(&mut self) -> Token {
+        let start = self.cursor;
+
+        let mut render = false;
+
+        if '!'
+            == self
+                .current()
+                .expect("This function should never be called at the end of a file.")
+        {
+            render = true;
+            self.consume();
+        }
+
+        let mut show_how = String::new();
+
+        self.consume_expect('[');
+
+        while let Some(c) = self.consume() {
+            if c == ']' {
+                break;
+            }
+            show_how.push(c);
+        }
+
+        // Return text if it was not a link after all
+        if self.current() != Some('(') {
+            return Token::Text(self.text[start..].iter().collect());
+        }
+
+        self.consume_expect('(');
+
+        let mut url = String::new();
+
+        while let Some(c) = self.consume() {
+            if c == ')' {
+                break;
+            }
+            url.push(c);
+        }
+
+        if self.current() == None {
+            eprintln!("WARNING: Unclosed bracket.");
+            self.cursor = start; // Reset cursor
+            self.consume_expect('[');
+            return Token::Text("[".to_string());
+        }
+
+        Token::ExternalLink(ExternalLink {
+            url,
+            show_how,
+            render,
+        })
     }
 
     fn consume_line(&mut self) -> Vec<Token> {
@@ -204,7 +285,12 @@ impl Lexer {
                 (Some('['), Some('['), _) | (Some('!'), Some('['), Some('[')) => {
                     tokens.push(Token::Text(s.clone()));
                     s.clear();
-                    tokens.push(self.consume_link());
+                    tokens.push(self.consume_internal_link());
+                }
+                (Some('['), Some(_), _) | (Some('!'), Some('['), _) => {
+                    tokens.push(Token::Text(s.clone()));
+                    s.clear();
+                    tokens.push(self.consume_external_link());
                 }
                 (Some('$'), Some('$'), _) => {
                     tokens.push(Token::Text(s.clone()));
