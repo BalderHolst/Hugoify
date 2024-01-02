@@ -36,10 +36,14 @@ pub struct InternalLink {
 }
 
 impl InternalLink {
-    pub fn label(&self) -> &str {
-        match &self.show_how {
+    pub fn label(&self) -> String {
+        let l = match &self.show_how {
             Some(s) => s.as_str(),
             None => self.dest.as_str(),
+        }.to_string();
+        match &self.position {
+            Some(pos) => format!("{}>{}", l, pos),
+            None => l,
         }
     }
 }
